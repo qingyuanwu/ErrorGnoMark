@@ -1,0 +1,15 @@
+numpy==1.23.5
+scipy==1.9.3
+qiskit==0.39.0
+qiskit-aer==0.13.0
+tqdm==4.64.0
+requests==2.28.1
+joblib==1.2.0
+matplotlib==3.7.1
+pandas==1.5.3
+qiskit-ignis==0.8.0
+qiskit-terra==0.23.0
+qiskit-primitives==0.1.0
+qiskit-visualization==0.2.1
+qiskit-aqua==0.9.5
+python-dotenv==0.21.0

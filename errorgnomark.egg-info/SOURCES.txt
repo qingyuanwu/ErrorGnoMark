@@ -1,0 +1,12 @@
+README.md
+setup.py
+ErrorGnoMark.egg-info/PKG-INFO
+ErrorGnoMark.egg-info/SOURCES.txt
+ErrorGnoMark.egg-info/dependency_links.txt
+ErrorGnoMark.egg-info/requires.txt
+ErrorGnoMark.egg-info/top_level.txt
+errorgnomark.egg-info/PKG-INFO
+errorgnomark.egg-info/SOURCES.txt
+errorgnomark.egg-info/dependency_links.txt
+errorgnomark.egg-info/requires.txt
+errorgnomark.egg-info/top_level.txt

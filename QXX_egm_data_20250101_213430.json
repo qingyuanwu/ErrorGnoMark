@@ -1,0 +1,249 @@
+{
+    "title": "QXX_egm_data_20250101_213430.json",
+    "chip_info": {
+        "chip_name": "QXX",
+        "rows": 10,
+        "columns": 10
+    },
+    "qubit_index_list": [
+        0,
+        1,
+        2,
+        10,
+        11,
+        12,
+        20,
+        21,
+        22
+    ],
+    "qubit_connectivity": [
+        [
+            0,
+            1
+        ],
+        [
+            1,
+            2
+        ],
+        [
+            10,
+            11
+        ],
+        [
+            11,
+            12
+        ],
+        [
+            20,
+            21
+        ],
+        [
+            21,
+            22
+        ]
+    ],
+    "results": {
+        "res_egmq1_rb": {
+            "qubit_0": {
+                "error_rate": 0.0014355755273275372
+            },
+            "qubit_1": {
+                "error_rate": 0.0010961064940064325
+            },
+            "qubit_2": {
+                "error_rate": 0.0013804109267437359
+            },
+            "qubit_10": {
+                "error_rate": 0.0015845432834164508
+            },
+            "qubit_11": {
+                "error_rate": 0.0011122548934046628
+            },
+            "qubit_12": {
+                "error_rate": 0.0013691143226123303
+            },
+            "qubit_20": {
+                "error_rate": 0.001588271975656641
+            },
+            "qubit_21": {
+                "error_rate": 0.001198774043570161
+            },
+            "qubit_22": {
+                "error_rate": 0.001333921264855431
+            }
+        },
+        "res_egmq1_xeb": {
+            "hardware": [
+                0.005869037367340235,
+                0.007056550395997452,
+                0.009378935550990397,
+                0.008309712460645657,
+                0.00712977139397758,
+                0.011952093839591227,
+                0.007323767118225022,
+                0.010475367761034249,
+                0.011768463368451498
+            ],
+            "use_fake_data": null
+        },
+        "res_egmq1_csbp2x": {
+            "process_infidelities": [
+                0.004382830153050965,
+                0.00411439062341501,
+                0.005416912508078964,
+                0.0040479148247458685,
+                0.003983427800378747,
+                0.0036830384616247658,
+                0.004058668205207283,
+                0.003937722116302389,
+                0.0033063900613585773
+            ],
+            "stochastic_infidelities": [
+                0.004374101155906418,
+                0.004107983519461067,
+                0.0054101041586710474,
+                0.0040404062792978035,
+                0.003978273105635255,
+                0.003679393673883702,
+                0.004052590949104373,
+                0.0039316698480745815,
+                0.003302792829605772
+            ],
+            "angle_errors": [
+                0,
+                0.0012206840226685056,
+                0,
+                0.0002333392967488468,
+                0,
+                0,
+                0.0022952775755393784,
+                0.0024693145189085275,
+                0
+            ],
+            "process_infidelity_avg": 0.004103477194906952,
+            "stochastic_infidelity_avg": 0.004097479502182224,
+            "angle_error_avg": 0.000690957268207251
+        },
+        "res_egmq2_rb": {
+            "[0, 1]": {
+                "error_rate": 0.005531670333617927
+            },
+            "[1, 2]": {
+                "error_rate": 0.005603682813541011
+            },
+            "[10, 11]": {
+                "error_rate": 0.005894393646952711
+            },
+            "[11, 12]": {
+                "error_rate": 0.005934133821745208
+            },
+            "[20, 21]": {
+                "error_rate": 0.005999307319751679
+            },
+            "[21, 22]": {
+                "error_rate": 0.006252770214985881
+            },
+            "average_error_rate": 0.005869326358432403
+        },
+        "res_egmq2_xeb": {
+            "hardware": [
+                0.1927717182655155,
+                0.19001884037255795,
+                0.17070173896766355,
+                0.15461983589950257,
+                0.3683834779189623,
+                0.1086565796298678
+            ],
+            "use_fake_data": null
+        },
+        "res_egmq2_csb_cz": {
+            "source": "noisysimulation",
+            "qubit_pairs_results": [
+                {
+                    "process_infidelity": 0.0005222854882971362,
+                    "stochastic_infidelity": 0.0002611768508222756,
+                    "theta_error": 0.07237546835923192,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.0004768669115795543,
+                    "stochastic_infidelity": 0.00023846188782572497,
+                    "theta_error": 0.07239292680124576,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.000459550698680089,
+                    "stochastic_infidelity": 0.00022980175376308143,
+                    "theta_error": 0.07265305741566008,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.0005121332075816998,
+                    "stochastic_infidelity": 0.00025609939724147157,
+                    "theta_error": 0.0724324688340694,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.0004930542103896984,
+                    "stochastic_infidelity": 0.0002465575004954035,
+                    "theta_error": 0.07230742202205276,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.0005334969485131236,
+                    "stochastic_infidelity": 0.0002667840611242367,
+                    "theta_error": 0.07254004621460908,
+                    "phi_error": 0.0
+                }
+            ]
+        },
+        "res_egmqm_ghz": {
+            "fidelity": [
+                0.996472288002445,
+                0.9950281927117854,
+                0.9929581779218127,
+                0.9913452698278131,
+                0.9893031307650968,
+                0.9878871562169665
+            ],
+            "qubit_index": [
+                0,
+                1,
+                2,
+                10,
+                11,
+                12,
+                20,
+                21,
+                22
+            ],
+            "source": "noisysimulation"
+        },
+        "res_egmqm_stqv": {
+            "nqubits_nqubits_2": {
+                "total_qubits": 2,
+                "quantum_volume": 4,
+                "error": null,
+                "fidelity": null
+            },
+            "nqubits_nqubits_3": {
+                "total_qubits": 3,
+                "quantum_volume": 8,
+                "error": null,
+                "fidelity": null
+            },
+            "nqubits_nqubits_4": {
+                "total_qubits": 4,
+                "quantum_volume": 0,
+                "error": null,
+                "fidelity": null
+            },
+            "nqubits_nqubits_5": {
+                "total_qubits": 5,
+                "quantum_volume": 32,
+                "error": null,
+                "fidelity": null
+            }
+        }
+    }
+}

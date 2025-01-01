@@ -1,0 +1,189 @@
+{
+    "title": "Baihua_egm_data_20250101_143255.json",
+    "chip_info": {
+        "chip_name": "Baihua",
+        "rows": 13,
+        "columns": 13
+    },
+    "qubit_index_list": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "qubit_connectivity": [
+        [
+            0,
+            1
+        ],
+        [
+            1,
+            2
+        ],
+        [
+            2,
+            3
+        ]
+    ],
+    "results": {
+        "res_egmq1_rb": {
+            "qubit_0": {
+                "error_rate": -0.00024060323738051004
+            },
+            "qubit_1": {
+                "error_rate": 0.00014440825991057782
+            },
+            "qubit_2": {
+                "error_rate": 0.001972832044006112
+            },
+            "qubit_3": {
+                "error_rate": 0.002145302949521477
+            }
+        },
+        "res_egmq1_xeb": {
+            "hardware": [
+                0.027187020121284544,
+                0.011339223880970473,
+                0.04732575302656017,
+                0.05344633305910668
+            ],
+            "use_fake_data": null
+        },
+        "res_egmq1_csbp2x": {
+            "process_infidelities": [
+                0.003622210015258198,
+                0.0036525394744610917,
+                0.005448405438600368,
+                0.0047179463108961706
+            ],
+            "stochastic_infidelities": [
+                0.003614723543077014,
+                0.0036480248287003025,
+                0.005438217188247441,
+                0.004707608823399156
+            ],
+            "angle_errors": [
+                0.003433616981731724,
+                0,
+                0,
+                0
+            ],
+            "process_infidelity_avg": 0.004360275309803957,
+            "stochastic_infidelity_avg": 0.004352143595855978,
+            "angle_error_avg": 0.000858404245432931
+        },
+        "res_egmq2_rb": {
+            "[0, 1]": {
+                "error_rate": 0.021753037365927125
+            },
+            "[1, 2]": {
+                "error_rate": 0.025159964451729216
+            },
+            "[2, 3]": {
+                "error_rate": 0.02221856085137683
+            },
+            "average_error_rate": 0.023043854223011057
+        },
+        "res_egmq2_xeb": {
+            "hardware": [
+                0.26353154607450446,
+                0.7337242366726564,
+                0.7221067084197479
+            ],
+            "use_fake_data": null
+        },
+        "res_egmq2_csb_cz": {
+            "source": "noisysimulation",
+            "qubit_pairs_results": [
+                {
+                    "process_infidelity": 0.0005375254599284673,
+                    "stochastic_infidelity": 0.00026879885637687284,
+                    "theta_error": 0.14186881551896402,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.0004413168545885915,
+                    "stochastic_infidelity": 0.0002206827777384568,
+                    "theta_error": 0.1413982890784058,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.0004371626279483509,
+                    "stochastic_infidelity": 0.00021860520809269257,
+                    "theta_error": 0.14138591027704583,
+                    "phi_error": 0.0
+                }
+            ]
+        },
+        "res_egmqm_ghz": {
+            "fidelity": [
+                0.997218784095845,
+                0.9957985524635715,
+                0.9922904275942334,
+                0.9914489183470137,
+                0.9884523700909309,
+                0.988640704489441
+            ],
+            "qubit_index": [
+                0,
+                1,
+                2,
+                3
+            ],
+            "source": "noisysimulation"
+        },
+        "res_egmqm_stqv": {
+            "nqubits_nqubits_2": {
+                "total_qubits": 2,
+                "quantum_volume": 4,
+                "error": null,
+                "fidelity": null
+            },
+            "nqubits_nqubits_3": {
+                "total_qubits": 3,
+                "quantum_volume": 8,
+                "error": null,
+                "fidelity": null
+            },
+            "nqubits_nqubits_4": {
+                "total_qubits": 4,
+                "quantum_volume": 0,
+                "error": null,
+                "fidelity": null
+            },
+            "nqubits_nqubits_5": {
+                "total_qubits": 5,
+                "quantum_volume": 0,
+                "error": null,
+                "fidelity": null
+            }
+        },
+        "res_egmqm_mrb": {
+            "qubit_groups": {
+                "qubit_group_1": {
+                    "length_1": 0.8611979166666667,
+                    "length_2": 0.7945312499999999,
+                    "length_3": 0.7301432291666666,
+                    "length_4": 0.6938151041666667,
+                    "length_5": 0.5962890625,
+                    "length_6": 0.5891927083333334
+                },
+                "qubit_group_2": {
+                    "length_1": 0.792248774509804,
+                    "length_2": 0.6395373774509804,
+                    "length_3": 0.6097426470588235,
+                    "length_4": 0.48535539215686274,
+                    "length_5": 0.390701593137255,
+                    "length_6": 0.39048713235294114
+                }
+            }
+        },
+        "res_egmqm_clops": {
+            "CLOPSQM": 11945.653941921986
+        },
+        "res_egmqm_vqe": {
+            "Final Energy": -0.7029303936160209,
+            "Problem Description": "Hamiltonian with 4 terms on 2 qubits using EfficientSU2 ansatz."
+        }
+    }
+}
