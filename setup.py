@@ -1,14 +1,24 @@
 from setuptools import setup, find_packages
+import os
 
 # Function to read the dependencies from the requirements.txt file
 def read_requirements():
-    with open('requirements.txt', 'r', encoding='utf-8') as f:
-        return f.read().splitlines()
+    requirements = []
+    if os.path.exists('requirements.txt'):
+        with open('requirements.txt', 'r', encoding='utf-8') as f:
+            for line in f:
+                # Remove comments and whitespace
+                line = line.split('#')[0].strip()
+                if line:
+                    requirements.append(line)
+    return requirements
 
 # Function to read the long description (usually from README.md)
 def read_long_description():
-    with open('README.md', 'r', encoding='utf-8') as f:
-        return f.read()
+    if os.path.exists('README.md'):
+        with open('README.md', 'r', encoding='utf-8') as f:
+            return f.read()
+    return "A Toolkit for Error Diagnosis and Benchmarking for Quantum Chip"
 
 setup(
     name='ErrorGnoMark',  # Package name
@@ -24,5 +34,13 @@ setup(
     install_requires=read_requirements(),  # Dependencies from requirements.txt
     python_requires='>=3.10',  # Minimum Python version
     include_package_data=True,  # Include additional files specified in MANIFEST.in
-    license="Apache-2.0 License"  # License type
+    license="Apache License 2.0",  # Standard license name
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.10',
+        'License :: OSI Approved :: Apache Software License',
+        'Operating System :: OS Independent',
+        'Intended Audience :: Developers',
+        'Topic :: Scientific/Engineering :: Physics',
+    ],
 )
