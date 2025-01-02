@@ -2,7 +2,7 @@
 
 ## Overview
 
-ErrorGnoMark (Error Diagnose & Benchmark) is a comprehensive tool developed by the Quantum Operating System Group at the Beijing Academy of Quantum Information Sciences. It aims to provide a complete and thorough benchmark and diagnostic information for quantum chip, covering different layers of the quantum operating system: physical layer, quantum gate (circuit) layer, and application Layer. It evaluates key dimensions such as Scalability, Quality, and Speed[^1]. 
+ErrorGnoMark (Error Diagnose & Benchmark) is a comprehensive tool developed by the Quantum Operating System Group at the Beijing Academy of Quantum Information Sciences. It aims to provide a complete and thorough benchmark and diagnostic information for quantum chip[^2][^3], covering different layers of the quantum operating system: physical layer, quantum gate (circuit) layer, and application Layer. It evaluates key dimensions such as Scalability, Quality, and Speed[^1]. 
 
 <p align="center">
   <img src="errorgnomark/egm.jpg" alt="ErrorGnoMark Illustration" width="500px">
@@ -30,29 +30,26 @@ ErrorGnoMark plays a crucial role in the journey toward building a fully functio
 
 We recommend installing **ErrorGnoMark** using pip for simplicity and convenience:
 
-\`\`\`sh
-pip install ErrorGnoMark
-\`\`\`sh
+`pip install ErrorGnoMark`
 
 
 ### Installation via GitHub
 Alternatively, you can clone the repository from GitHub and install the package locally:
 
-\`\`\`sh
-git clone https://github.com/BAQIS-Quantum/ErrorGnoMark
-cd ErrorGnoMark
-pip install -e .
-\`\`\`sh
+
+`git clone https://github.com/BAQIS-Quantum/ErrorGnoMark`
+`cd ErrorGnoMark`
+`pip install -e .`
+
 
 
 ## Running Example Programs
 
 To verify the installation, you can run example programs:
 
-\`\`\`sh
-cd example 
-QC-lmc.py
-\`\`\`
+`cd example`
+`QC-lmc.py`
+
 
 
 
