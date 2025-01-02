@@ -1,24 +1,28 @@
-import sys
-import os
-import json
-import time
-from datetime import datetime
-from tqdm import tqdm
-from requests.exceptions import RequestException, ReadTimeout
+# Standard library imports
+import json  # For handling JSON data
+import os  # For file and directory management
+import sys  # For system-specific parameters and functions
+import time  # For timing operations
+from datetime import datetime  # For handling date and time
+
+# Third-party library imports
+from requests.exceptions import RequestException, ReadTimeout  # For HTTP requests and error handling
+from tqdm import tqdm  # For progress bar visualization
 
 # Add the ErrorGnoMark package to the system path
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')
+sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')  # Adjust the path to your system's setup
 
-# ErrorGnoMark-specific imports
-from errorgnomark.cirpulse_generator.qubit_selector import qubit_selection, chip
-from errorgnomark.configuration import (
+# Local imports
+from errorgnomark.cirpulse_generator.qubit_selector import qubit_selection, chip  # For qubit selection and chip setup
+from errorgnomark.configuration import (  # For various quality and benchmarking configurations
     QualityQ1Gate,
     QualityQ2Gate,
     QualityQmgate,
     SpeedQmgate,
     ApplicationQmgate
 )
-from egm_report_tools import EGMReportManager  # Import the report manager
+from errorgnomark.results_tools.egm_report_tools import EGMReportManager  # For generating reports
+
 
 class Errorgnomarker(chip):
     """
@@ -26,7 +30,7 @@ class Errorgnomarker(chip):
     Supports single-qubit, two-qubit, multi-qubit gates, and application-level tests.
     """
 
-    def __init__(self, chip_name="QXX"):
+    def __init__(self, chip_name="QXX",result_get= 'noisysimulation'):
         """
         Initializes the ErrorGnoMarker with the specified chip configuration.
 
@@ -44,18 +48,19 @@ class Errorgnomarker(chip):
         else:
             # Handle other chip configurations if necessary
             raise ValueError(f"Unsupported chip name: {self.chip_name}")
-
+        
+        self.result_get = result_get
         # Step 1: Define selection options
         self.selection_options = {
-            'max_qubits_per_row': 3,
+            'max_qubits_per_row': 9,
             'min_qubit_index': 0,
-            'max_qubit_index': 29
+            'max_qubit_index': 50
         }
 
         # Step 2: Initialize qubit selection with constraints
         self.selector = qubit_selection(
             chip=self,
-            qubit_index_max=29,
+            qubit_index_max=50,
             qubit_number=9,
             option=self.selection_options
         )
@@ -71,7 +76,6 @@ class Errorgnomarker(chip):
         print("=" * 50)
 
         # Initialize configuration objects with the selected qubits and connectivity
-        result_get = 'noisysimulation'  # or 'hardware' based on your requirement
 
         self.config_quality_q1gate = QualityQ1Gate(self.qubit_index_list, result_get=result_get)
         self.config_quality_q2gate = QualityQ2Gate(self.qubit_connectivity, result_get=result_get)
@@ -79,7 +83,7 @@ class Errorgnomarker(chip):
         self.config_speed_qmgate = SpeedQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
         self.config_application_qmgate = ApplicationQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
 
-    def egm_run(self, egm_level='level_0', visual_table=None, visual_figure=None):
+    def egm_run(self, egm_level='level_2', visual_table=None, visual_figure=None):
         """
         Executes the EGM metrics and saves the results to a JSON file.
 
@@ -189,42 +193,7 @@ class Errorgnomarker(chip):
         # Prepare the filename with chip name and current datetime
         current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{self.chip_name}_egm_data_{current_datetime}.json"
-        filepath = os.path.join(os.getcwd(), filename)
-
-        # Prepare the full results dictionary with title and initial information
-        full_results = {
-            "title": filename,
-            "chip_info": {
-                "chip_name": self.chip_name,
-                "rows": self.rows,
-                "columns": self.columns
-            },
-            "qubit_index_list": self.qubit_index_list,
-            "qubit_connectivity": self.qubit_connectivity,
-            "results": results
-        }
-
-        # Save the full results dictionary to a JSON file
-        try:
-            with open(filepath, 'w') as json_file:
-                json.dump(full_results, json_file, indent=4)
-            print(f"EGM results saved to {filepath}")
-        except Exception as e:
-            print(f"Failed to save EGM results to JSON file: {e}")
-
-        # Generate the Level02 table or figures if specified
-        if visual_table:
-            print("[Generating] Level02 Table...")
-            report_manager = EGMReportManager(filepath)
-            report_manager.egm_level02_table()
-
-        if visual_figure:
-            print("[Generating] Level02 Figures...")
-            report_manager = EGMReportManager(filepath)
-            report_manager.egm_level02_figure()
-
-        # Optionally, you can return the full results dictionary
-        return full_results
+        
 
 
 

@@ -1,14 +1,21 @@
-import sys
-# Add your module path if needed
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark') 
+# Standard library imports
+import sys  # For system-specific parameters and functions
+import os  # For interacting with the operating system
+import random  # For generating random numbers
+import itertools  # For efficient looping
+from copy import deepcopy  # For deep copying objects
+from contextlib import contextmanager  # For context management utilities
+import warnings  # For handling warning messages
+import copy 
 # Suppress DeprecationWarnings
-from copy import deepcopy
-import warnings 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
-import random
-import numpy as np
-from qiskit import QuantumCircuit
-import copy
+
+# Third-party imports
+import numpy as np  # For numerical operations
+from qiskit import QuantumCircuit  # For creating and managing quantum circuits
+
+# ErrorGnoMark-specific imports
+sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')  # Add your custom module path if needed
 from errorgnomark.cirpulse_generator.elements import (
     ROTATION_ANGLES,
     SINGLE_QUBIT_GATES,
@@ -16,16 +23,12 @@ from errorgnomark.cirpulse_generator.elements import (
     get_random_rotation_gate,
     csbq1_circuit_generator,
     Csbq2_cz_circuit_generator,
-    permute_qubits, 
-    apply_random_su4_layer, 
-    qv_circuit_layer
+    permute_qubits,
+    apply_random_su4_layer,
+    qv_circuit_layer,
+    CliffordGateSet  # For Clifford gate operations
 )
 
-from errorgnomark.cirpulse_generator.elements import CliffordGateSet
-import itertools
-from contextlib import contextmanager
-import sys
-import os
 
 @contextmanager
 def DisablePrint():
@@ -46,8 +49,22 @@ def DisablePrint():
 
 
 
-
 class CircuitGenerator:
+
+    """
+    This class generates quantum circuits for various benchmarking schemes, including:
+
+    1. **Single-Qubit Gate Quality**: CSB, RB, and XEB for single-qubit gates.
+    2. **Two-Qubit Gate Quality**: CSB, RB, and XEB for two-qubit gates.
+    3. **Multi-Qubit Gate Quality**: GHZ fidelity, MRB, and Standard Quantum Volume (SQV).
+    4. **Multi-Qubit Gate Speed**: CLOPS (Layer Operations Per Second).
+
+    The class dynamically generates circuits based on selected qubits and their connectivity.
+
+    **Note**: `Qiskit` is used for circuit generation here, but other frameworks (e.g., Cirq, pyQuil) 
+    could be used in principle.
+    """
+
     def __init__(self, qubit_select, qubit_connectivity, length_max=12, step_size=2):
         """
         Initializes the Circuit Generator.
@@ -446,76 +463,6 @@ class CircuitGenerator:
         return ghz_circuits
 
 
-
-
-    # qubit_index = [0,1,2,3,4,5,6,7,8]第二组执行会有问题
-    # def ghz_circuits(self, nqubit_ghz, qubit_index, ncr):
-    #     """
-    #     Generates GHZ circuits based on the available qubit indices, with nested lists for multiple circuits.
-
-    #     Parameters:
-    #         nqubit_ghz (int): Number of qubits in each GHZ circuit.
-    #         qubit_index (list): List of qubit indices to select from.
-    #         ncr (int): Number of GHZ circuits to generate for each set of qubits.
-
-    #     Returns:
-    #         list: A nested list containing GHZ circuits, where the outer list corresponds to different qubit sets,
-    #             and the inner list corresponds to multiple circuits for each qubit set.
-    #     """
-        
-    #     # Validate the number of qubits and indices
-    #     if nqubit_ghz > len(qubit_index):
-    #         raise ValueError(
-    #             f"nqubit_ghz ({nqubit_ghz}) exceeds the total number of available qubits in qubit_index ({len(qubit_index)})."
-    #         )
-
-    #     ghz_circuits = []
-
-    #     # Loop to create GHZ circuits for different qubit index selections
-    #     for i in range(0, len(qubit_index), nqubit_ghz):
-    #         selected_qubits = qubit_index[i:i + nqubit_ghz]  # Select the next nqubit_ghz qubits from the index list
-
-    #         # Ensure we have enough qubits, and avoid selecting duplicate sets
-    #         if len(selected_qubits) < nqubit_ghz:
-    #             continue  # Skip if not enough qubits for this iteration
-            
-    #         # Total qubits needed for the circuit: the max qubit index + 1
-    #         total_qubits_in_circuit = max(selected_qubits) + 1
-
-    #         # Create a list to hold circuits for the current qubit selection
-    #         circuit_group = []
-
-    #         # Create ncr number of circuits for the current qubit set
-    #         for _ in range(ncr):
-    #             # Create a new QuantumCircuit instance based on the largest qubit index
-    #             circuit = QuantumCircuit(total_qubits_in_circuit, total_qubits_in_circuit)
-
-    #             # Apply Hadamard gate to the first qubit
-    #             circuit.h(selected_qubits[0])
-    #             circuit.barrier()
-
-    #             # Apply CZ gates sequentially for the rest of the qubits
-    #             for j in range(1, nqubit_ghz):
-    #                 circuit.cz(selected_qubits[j - 1], selected_qubits[j])
-    #                 circuit.barrier()
-
-    #             # Measure the qubits
-    #             circuit.measure(selected_qubits, selected_qubits)
-
-    #             # Ensure the generated circuit is of type QuantumCircuit
-    #             if not isinstance(circuit, QuantumCircuit):
-    #                 raise TypeError("Generated circuit is not a valid QuantumCircuit object.")
-
-    #             # Add the circuit to the current group
-    #             circuit_group.append(circuit)
-
-    #         # Add the group of circuits to the main list
-    #         ghz_circuits.append(circuit_group)
-
-    #     return ghz_circuits
-
-
-
     def stanqvqm_circuit(self, ncr=30,nqubits_max=16):
         """
         Generate Quantum Volume (QV) circuits for each qubit count from 1 to nqubits_max.
@@ -745,160 +692,3 @@ class CircuitGenerator:
             
             return all_circuits  # Return the list of generated circuits for all layers
 
-
-
-
-
-# if __name__ == "__main__":
-#     import numpy as np
-#     from qiskit.circuit.library import CZGate, RXGate, RYGate, RZGate
-
-#     # 定义 CZ_GATE
-#     CZ_GATE = CZGate()
-
-#     # 定义 get_random_rotation_gate 函数
-#     def get_random_rotation_gate():
-#         gate_class = random.choice([RXGate, RYGate, RZGate])
-#         angle = random.uniform(0, 2 * np.pi)
-#         return gate_class(angle)
-
-#     # 初始化 CircuitGenerator，假设 backend 为 'quarkstudio'
-#     qubit_select = [0, 1, 2, 3]  # 示例量子比特选择
-#     qubit_connectivity = [(0, 1), (1, 2), (2, 3)]  # 示例量子比特连接
-#     circuit_gen = CircuitGenerator(
-#         qubit_select=qubit_select,
-#         qubit_connectivity=qubit_connectivity,
-#         length_max=10,
-#         step_size=2
-#     )
-
-#     # 生成 mrbqm 电路，假设 density_cz=0.5, ncr=2
-#     generated_mrbqm_circuits = circuit_gen.mrbqm_circuit(density_cz=0.5, ncr=2)
-
-#     # # 打印生成的 mrbqm 电路
-#     # print("=== MRBQM Circuits ===")
-#     # for idx, qc in enumerate(generated_mrbqm_circuits, start=1):
-#     #     print(f"Circuit {idx}:")
-#     #     print(qc.draw(output='text'))
-#     #     print("\n" + "="*50 + "\n")
-# print (' generated_mrbqm_circuits', generated_mrbqm_circuits[1][0][0])
-
-
-# if __name__ == "__main__":
-#     # 定义 qubits 和它们的连接
-#     qubit_select = [0, 1, 2, 3]
-#     qubit_connectivity = [(0, 1), (1, 2), (2, 3), (0, 3)]
-
-#     # 初始化 CircuitGenerator，假设 backend 为 'default'
-#     circuit_gen = CircuitGenerator(
-#         qubit_select=qubit_select,
-#         qubit_connectivity=qubit_connectivity,
-#         length_max=10,
-#         step_size=2
-#     )
-
-#     # 生成电路，假设 density_cz=0.5，生成每个长度 5 个电路
-#     generated_circuits = circuit_gen.ghz_circuits(4,3)
-
-#     # # 打印生成的电路
-#     # for idx, qc in enumerate(generated_circuits):
-#     #     print(f"电路 {idx+1}:")
-#     #     print(qc)
-
-# print (generated_circuits[2])
-
-
-
-# # 创建 CircuitGenerator 对象
-# generator = CircuitGenerator(
-#     qubit_select=[0, 1], 
-#     qubit_connectivity=[(0, 1), (1, 2)],  # 量子比特连接对
-#     length_max=20
-# )
-
-# # 生成 CZ gate 的 CSB 电路
-# circuits = generator.generate_csbcircuit_for_gate('XGate')
-
-
-# print ('csb-circuits', circuits[0][4])
-
-
-
-
-
-# circuit_gen = CircuitGenerator(
-#         qubit_select=[0, 1, 2, 3],
-#         qubit_connectivity=[[0, 1],[1,2],[2,3]]
-#     )
-
-# # 生成 RBQ1 和 RBQ2 电路
-# # rbq1_circuits = circuit_gen.rbq1_circuit()
-# rbq2_circuits = circuit_gen.rbq2_circuit()
-
-# # 打印第一个生成的 rbq2 电路
-# # print('rbq1_circuits', rbq1_circuits[1][1][1])
-# print('rbq2_circuits',rbq2_circuits[1][1][1])
-
-
-# test_circuit_generator.py
-
-
-
-# # 定义您的量子比特选择和连接
-# qubit_select = [0, 1, 2, 3]
-# qubit_connectivity = [(0, 1),(1, 2)]
-# length_max = 4  # 设置较小的长度以便快速测试
-# step_size = 1
-# ncr = 3  # 每个长度生成一个电路
-
-# # 初始化 CircuitGenerator
-# circuit_gen = CircuitGenerator(qubit_select, qubit_connectivity, length_max, step_size)
-
-# # 生成 XEB 1-qubit 电路
-# xeb_q1 = circuit_gen.xebq1_circuit(ncr)
-
-# # 生成 XEB 2-qubit 电路
-# xeb_q2 = circuit_gen.xebq2_circuit(ncr)
-
-
-# print ("xeb_q1", xeb_q1[0][1][0])
-# print ("xeb_q2", xeb_q2[1][1][0])
-# # Now xeb_q1 and xeb_q2 contain the generated circuits
-
-
-    # def csbq1_circuit(self, ncr):
-    #     return circuits_csbq1
-
-
-    # def csbq2_circuit(self, ncr):
-    #     return circuits_csbq2
-
-
-    # def xebq1_circuit(self, ncr):
-    #     return circuits_xebq1
-
-    # def xebq2_circuit(self, ncr):
-    #     return circuits_xebq2
-
-    # def xebqm_circuit(self, ncr):
-    #     return circuits_xebqm
-    
-    # def standard_qvqm_circuit(self, ncr):
-    #     return circuits_standard_qvqm
-
-    # def ghzqm_circuit(self, ncr):
-    #     return circuits_ghzqm
-    
-    # def clopsqvqm_circuit(self, ncr):
-    #     return circuits_clopsqvqm_
-
-    # def mrbqm_circuit(self, ncr):
-    #     return circuits_mrbqm
-    
-    # def xtalkqm_circuit(self, ncr):
-    #     return xtalkqm
-    
-
-
-
-    

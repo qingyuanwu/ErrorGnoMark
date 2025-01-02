@@ -1,33 +1,26 @@
-import sys
-from scipy.optimize import curve_fit
-
+# Standard library imports
+import sys  # For system-specific parameters and functions
 
 # Third-party imports
-import numpy as np
-from tqdm import tqdm  # Progress bar
+import numpy as np  # For numerical operations
+from scipy.optimize import curve_fit, minimize  # For optimization
+from tqdm import tqdm  # For progress bar visualization
+from joblib import Parallel, delayed  # For parallel processing
 
 # Qiskit-related imports
-from qiskit import transpile
-from qiskit import QuantumCircuit
-from qiskit.circuit.library import EfficientSU2
-from qiskit.quantum_info import SparsePauliOp
-from qiskit_aer import AerSimulator
-from qiskit.primitives import Estimator
+from qiskit import QuantumCircuit, transpile  # For circuit creation and transpilation
+from qiskit.circuit.library import EfficientSU2  # Predefined quantum circuit templates
+from qiskit.quantum_info import SparsePauliOp  # For representing Pauli operators
+from qiskit_aer import AerSimulator  # For simulating quantum circuits
+from qiskit.primitives import Estimator  # For estimating circuit properties
 
 # ErrorGnoMark-specific imports
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark') 
-from errorgnomark.cirpulse_generator.circuit_generator import CircuitGenerator
-from errorgnomark.execute import QuantumJobRunner
-from errorgnomark.data_analysis.layer_cirgate import MetricQuality, MetricSpeed
+sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')  # Add local project path
+from errorgnomark.cirpulse_generator.circuit_generator import CircuitGenerator  # For circuit generation
+from errorgnomark.execute import QuantumJobRunner  # For executing quantum jobs
+from errorgnomark.data_analysis.layer_cirgate import MetricQuality, MetricSpeed  # For analyzing circuit metrics
 
 
-# helper_functions.py
-
-from joblib import Parallel, delayed
-import numpy as np
-from errorgnomark.execute import QuantumJobRunner
-
-from scipy.optimize import minimize
 
 def process_qubit_rb_q1(qubit_circuit, result_get):
     """
@@ -50,32 +43,6 @@ def process_qubit_rb_q1(qubit_circuit, result_get):
         length_results.append(results)
     return length_results
 
-def process_qubit_xeb_q1(qubit_circuits, result_get):
-    """
-    Processes all lengths for a single qubit for XEB.
-
-    Parameters:
-        qubit_circuits (list): List of circuits for different lengths for one qubit.
-
-    Returns:
-        tuple: (simulation_results, hardware_results)
-    """
-    qubit_sim_results = []
-    qubit_hardware_results = []
-    for length_circuits in qubit_circuits:
-        # Run simulation for ncr circuits at this qubit and length
-        job_runner_simulation = QuantumJobRunner(length_circuits)
-        simulation_results = job_runner_simulation.simulation_ideal_qiskit()
-        qubit_sim_results.append(simulation_results)
-
-        # Run hardware or noisy simulation
-        job_runner_hardware = QuantumJobRunner(length_circuits)
-        if result_get == 'hardware':
-            hardware_results = job_runner_hardware.quarkstudio_run(compile=False)
-        elif result_get == 'noisysimulation':
-            hardware_results = job_runner_hardware.simulation_ideal_qiskit(noise_model=True)
-        qubit_hardware_results.append(hardware_results)
-    return qubit_sim_results, qubit_hardware_results
 
 def process_qubit_rb_q2(qubit_pair_circuit, result_get):
     """
@@ -98,78 +65,7 @@ def process_qubit_rb_q2(qubit_pair_circuit, result_get):
         length_results.append(results)
     return length_results
 
-def process_qubit_xeb_q2(qubit_pair_circuits, result_get):
-    """
-    Processes all lengths for a single qubit pair for XEB.
 
-    Parameters:
-        qubit_pair_circuits (list): List of circuits for different lengths for one qubit pair.
-        result_get (str): Defines whether to use 'hardware', 'noisy simulation', or 'ideal simulation' (no noise).
-
-    Returns:
-        tuple: (simulation_results, hardware_results)
-    """
-    qubit_sim_results = []
-    qubit_hardware_results = []
-
-    for length_circuits in qubit_pair_circuits:
-        # Run simulation for ncr circuits at this qubit pair and length (ideal simulation, no noise)
-        job_runner_simulation = QuantumJobRunner(length_circuits)
-        simulation_results = job_runner_simulation.simulation_ideal_qiskit()
-        qubit_sim_results.append(simulation_results)
-
-        # Run hardware or noisy simulation, or ideal simulation based on result_get
-        job_runner_hardware = QuantumJobRunner(length_circuits)
-        
-        if result_get == 'hardware':
-            # Use actual hardware results (without noise model)
-            hardware_results = job_runner_hardware.quarkstudio_run(compile=False)
-        elif result_get == 'noisysimulation':
-            # Use noisy simulation results
-            hardware_results = job_runner_hardware.simulation_ideal_qiskit(noise_model=True)
-        elif result_get == 'ideal_simulation':
-            # Use ideal simulation with no noise model (this will be the XEB ideal results)
-            hardware_results = job_runner_hardware.simulation_ideal_qiskit(noise_model=None)
-        else:
-            raise ValueError(f"Unknown result_get value: {result_get}. Use 'hardware', 'noisysimulation', or 'ideal_simulation'.")
-        
-        qubit_hardware_results.append(hardware_results)
-
-    return qubit_sim_results, qubit_hardware_results
-
-
-
-def process_qubit_csb_cz_q2(qubit_pair_circuits, result_get):
-    """
-    Processes all lengths for a single qubit pair in CSB CZ benchmarking.
-
-    Parameters:
-        qubit_pair_circuits (list): List of circuits for different lengths for one qubit pair.
-        result_get (str): Type of result to retrieve ('hardware' or 'noisysimulation').
-
-    Returns:
-        list: Results for all lengths for the qubit pair.
-    """
-    length_results = []
-    for length_circuits in qubit_pair_circuits:
-        job_runner = QuantumJobRunner(length_circuits)
-        if result_get == 'hardware':
-            results = job_runner.quarkstudio_run(compile=False)
-        elif result_get == 'noisysimulation':
-            results = job_runner.simulation_ideal_qiskit(noise_model=True)
-        length_results.append(results)
-    return length_results
-
-
-
-
-# quality_q1_gate.py
-
-from joblib import Parallel, delayed
-import numpy as np
-from tqdm import tqdm
-from errorgnomark.cirpulse_generator.circuit_generator import CircuitGenerator
-from errorgnomark.data_analysis.layer_cirgate import MetricQuality
 
 
 class QualityQ1Gate:
@@ -905,7 +801,7 @@ class SpeedQmgate:
         self.qubit_index_list = qubit_index_list
         self.result_get = result_get
     
-    def qmclops(self, num_templates=100, num_updates=5, num_layers=5, num_qubits=5, num_shots=1024):
+    def qmclops(self, num_templates=50, num_updates=5, num_layers=5, num_qubits=5, num_shots=1024):
         """
         Calculates CLOPSQM (Circuit Layer Optimization for Quantum Simulation Metric).
 
@@ -1089,155 +985,3 @@ class ApplicationQmgate:
             f"on {num_qubits} qubits using {ansatz_type} ansatz."
         )
         return description
-
-
-
-
-
-
-# #     def xebqm(self, length_max, ncr):
-
-# #         return res_qmxeb
-
-
-# #     def xtalkqm(self, qubit_select):
-
-# #         return qm_xtalk
-        
-
-
-# # class property_qubit():
-# #     self.qubit_select = qubit_select
-
-# #     def get_from_web():
-
-# #         return res_get_from_web
-
-# #     def egm_real_time():
-        
-# #         return res_egm_real_time
-
-
-# if __name__ == '__main__':
-#     # Example qubit indices
-#     qubit_indices = [0, 1, 2]  # Add more as needed
-
-#     # Initialize PropertyQ1Gate with qubit indices
-#     property_q1 = QualityQ1Gate(qubit_indices,result_get = 'noisysimulation')
-
-#     token = "5vtENo5IEGViJNv:nmgYuZ:ehMobWzUd6qcu7pMeSZW/Rg{dUPyBkO{5DO{BEP4VkO{dUN7JDd5WnJtJDOyp{O1pEOyBjNy1jNy1DOzBkNjpkJ1GXbjxjJvOnMkGnM{mXdiKHRliYbii3ZjpkJzW3d2Kzf"  # Replace with your actual token
-
-
-#     # Run 1-qubit RB and get error rates using fake data
-#     rbq1_error_rates_fake = property_q1.q1rb()
-#     print(" rbq1_error_rates (Fake Data):", rbq1_error_rates_fake)
-    
-#     # Run 1-qubit RB and get error rates using fake data
-#     xebq1_error_rates_fake = property_q1.q1xeb()
-#     print("xebq1_error_rates (Fake Data):", xebq1_error_rates_fake)
-
-#     csb_errors_pi_over_2_x = property_q1.q1csb_pi_over_2_x()
-#     print("csbq1_error_rates_fake:", csb_errors_pi_over_2_x)
-
-#     # csbq1_z = property_q1.q1csb_gate(gate_name='ZGate')
-#     # print("csbq1_z:", csbq1_z)
-
-
-
-# if __name__ == '__main__':
-#     # Example qubit pairs
-#     qubit_pairs = [(0, 1),(1, 2)]  # Add more pairs as needed
-
-#     # Initialize PropertyQ2Gate with qubit pairs
-#     property_q2 = QualityQ2Gate(qubit_pairs,result_get='noisysimulation')
-
-#     # Define token (ensure to replace with your actual token)
-#     token = "5vtENo5IEGViJNv:nmgYuZ:ehMobWzUd6qcu7pMeSZW/Rg{dUPyBkO{5DO{BEP4VkO{dUN7JDd5WnJtJDOyp{O1pEOyBjNy1jNy1DOzBkNjpkJ1GXbjxjJvOnMkGnM{mXdiKHRliYbii3ZjpkJzW3d2Kzf"  # Replace with your actual token
-
-#     # Run 2-qubit RB and get error rates using fake data
-#     rbq2_error_rates_fake = property_q2.q2rb()
-#     print("rbq2_error_rates (Fake Data):", rbq2_error_rates_fake) 
-
-#     # Run 2-qubit RB and get error rates using fake data
-#     xebq2_error_rates_fake = property_q2.q2xeb()
-#     print("xebq2_error_rates (Fake Data):", xebq2_error_rates_fake)
-
-#     csbq2_error_rates_fake = property_q2.q2csb_cz()
-#     print("csbq2_error_rates_fake:", csbq2_error_rates_fake)
-
-
-
-# if __name__ == "__main__":
-#     # 定义需要测试的 qubit pair 列表
-#     qubit_index_list = [0,1,2]
-#     qubit_pair_list = [(0, 1), (1, 2)]  # 示例：连接对 (0,1) 和 (1,2)
-
-#     # 创建 PropertyQ2Gate 对象
-#     property_q2gate = QualityQmgate(qubit_index_list=qubit_index_list,qubit_connectivity=qubit_pair_list,result_get='noisysimulation')
-
-#     # 计算 CSB 误差率
-#     qmstanqv = property_q2gate.qmstanqv()
-
-#     # 打印结果
-#     print("qmstanqv:",qmstanqv)
-
-
-
-# if __name__ == "__main__":
-#     # 定义需要测试的 qubit pair 列表
-#     qubit_index_list = [0, 1, 2, 5, 6, 7]
-#     qubit_pair_list = [[0, 1], [1, 2],[2,3]]  # 示例：连接对 (0,1) 和 (1,2)
-
-#     # 创建 PropertyQ2Gate 对象
-#     property_q2gate = QualityQmgate(qubit_pair_list, qubit_index_list,result_get='noisysimulation')
-
-#     # 计算 CSB 误差率
-#     qmqmmrb = property_q2gate.qmmrb()
-
-#     # 打印结果
-#     print("qmqmmrb:",qmqmmrb)
-
-
-# if __name__ == "__main__":
-#     # 定义需要测试的 qubit pair 列表
-#     qubit_index_list = [0,1,2,3,4,5,6,7,8,9]
-#     qubit_pair_list = [(0, 1), (1, 2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8)]  # 示例：连接对 (0,1) 和 (1,2)
-
-#     # 创建 PropertyQ2Gate 对象
-#     property_q2gate = QualityQmgate(qubit_index_list=qubit_index_list,qubit_connectivity=qubit_pair_list,result_get='noisysimulation')
-
-#     # 计算 CSB 误差率
-#     qmghz_fidelity = property_q2gate.qmghz_fidelity()
-
-#     # 打印结果
-#     print("qmghz_fidelity:",qmghz_fidelity)
-
-# if __name__ == "__main__":
-#     # 定义需要测试的 qubit pair 列表
-#     qubit_index_list = [0,1,2,3]
-#     qubit_pair_list = [(0, 1), (1, 2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8)]  # 示例：连接对 (0,1) 和 (1,2)
-
-#     # 创建 PropertyQ2Gate 对象
-#     property_q2gate = SpeedQmgate(qubit_pair_list, qubit_index_list, result_get='noisysimulation')
-
-#     # 计算 CSB 误差率
-#     qmclopss = property_q2gate.qmclops()
-
-#     # 打印结果
-#     print("qmclopss:",qmclopss)
-
-
-
-# if __name__ == "__main__":
-#     # 定义需要测试的 qubit pair 列表
-#     qubit_index_list = [0,1,2,3]
-#     qubit_pair_list = [(0, 1), (1, 2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8)]  # 示例：连接对 (0,1) 和 (1,2)
-
-#     # 创建 PropertyQ2Gate 对象
-#     property_q2gate =ApplicationQmgate(qubit_index_list=qubit_index_list,qubit_connectivity=qubit_pair_list,result_get='noisysimulation')
-
-#     # 计算 CSB 误差率
-#     qmVQE = property_q2gate.qmVQE()
-
-#     # 打印结果
-#     print("qmVQE:",qmVQE)

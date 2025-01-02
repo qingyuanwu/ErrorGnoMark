@@ -2,46 +2,61 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+
 class VisualPlot:
+    """
+    A class for visualizing quantum benchmarking metrics stored in a JSON file.
+    It generates heatmaps for various benchmarking results, including single-qubit and 
+    two-qubit gate quality metrics such as RB, XEB, and CSB.
+    """
+
     def __init__(self, file_path):
         """
-        初始化 VisualPlot 类
-        :param file_path: JSON 文件路径
+        Initialize the VisualPlot class.
+        
+        Parameters:
+            file_path (str): Path to the JSON file containing benchmarking results.
         """
         self.file_path = file_path
         self.data = self._load_data()
 
     def _load_data(self):
         """
-        加载 JSON 数据
+        Load data from the JSON file.
+
+        Returns:
+            dict: Parsed JSON data.
         """
         with open(self.file_path, "r") as f:
             return json.load(f)
 
     def plot_heatmap_with_spacing(self, grid, title, colorbar_label, cmap='viridis'):
         """
-        绘制带有单元格间隙的热力图
-        :param grid: 热力图数据
-        :param title: 图标题
-        :param colorbar_label: 色条标签
-        :param cmap: 色彩映射，默认为 viridis
+        Create a heatmap with grid spacing to visualize benchmarking data.
+        
+        Parameters:
+            grid (ndarray): Heatmap data as a 2D NumPy array.
+            title (str): Title of the heatmap.
+            colorbar_label (str): Label for the colorbar.
+            cmap (str): Colormap for the heatmap (default: 'viridis').
         """
         fig, ax = plt.subplots()
         im = ax.imshow(grid, cmap=cmap, interpolation='nearest')
         plt.colorbar(im, ax=ax, label=colorbar_label)
 
-        # 创建白色的网格间隙
+        # Add white grid lines between cells
         for i in range(grid.shape[0] + 1):
             ax.axhline(i - 0.5, color='white', linewidth=1.5)
             ax.axvline(i - 0.5, color='white', linewidth=1.5)
 
-        # 设置整数显示
+        # Configure axis labels
         ax.set_xticks(np.arange(grid.shape[1]))
         ax.set_yticks(np.arange(grid.shape[0]))
         ax.set_xticklabels(np.arange(grid.shape[1]))
         ax.set_yticklabels(np.arange(grid.shape[0]))
-        
-        # 设置标题和标签
         ax.set_title(title)
         ax.set_xlabel("Column")
         ax.set_ylabel("Row")
@@ -49,7 +64,10 @@ class VisualPlot:
 
     def plot_rbq1(self, grid_size=(5, 5)):
         """
-        绘制 RB 错误率热力图
+        Generate a heatmap for single-qubit Randomized Benchmarking (RB) error rates.
+        
+        Parameters:
+            grid_size (tuple): Dimensions of the grid (default: (5, 5)).
         """
         rows, cols = grid_size
         grid = np.zeros((rows, cols))
@@ -65,7 +83,10 @@ class VisualPlot:
 
     def plot_xebq1(self, grid_size=(5, 5)):
         """
-        绘制 XEB 错误率热力图
+        Generate a heatmap for single-qubit Cross-Entropy Benchmarking (XEB) results.
+        
+        Parameters:
+            grid_size (tuple): Dimensions of the grid (default: (5, 5)).
         """
         rows, cols = grid_size
         grid = np.zeros((rows, cols))
@@ -80,7 +101,11 @@ class VisualPlot:
 
     def plot_csbq1(self, grid_size=(5, 5)):
         """
-        绘制 CSB 相关指标的热力图
+        Generate heatmaps for single-qubit CSB metrics, including process infidelities, 
+        stochastic infidelities, and angle errors.
+        
+        Parameters:
+            grid_size (tuple): Dimensions of the grid (default: (5, 5)).
         """
         rows, cols = grid_size
         csb_data = self.data["results"]["res_egmq1_csbp2x"]
@@ -105,7 +130,7 @@ class VisualPlot:
 
     def plot_rbq2(self):
         """
-        绘制两比特门 RB 错误率的热力图
+        Generate a heatmap for two-qubit Randomized Benchmarking (RB) error rates.
         """
         qubit_pairs = self.data["qubit_connectivity"]
         rb_data = self.data["results"]["res_egmq2_rb"]
@@ -128,7 +153,7 @@ class VisualPlot:
 
     def plot_xebq2(self):
         """
-        绘制两比特门 XEB 错误率的热力图
+        Generate a heatmap for two-qubit Cross-Entropy Benchmarking (XEB) error rates.
         """
         qubit_pairs = self.data["qubit_connectivity"]
         xeb_data = self.data["results"]["res_egmq2_xeb"]["hardware"]
@@ -145,13 +170,3 @@ class VisualPlot:
             grid[pair[1], pair[0]] = xeb_data[index]
         
         self.plot_heatmap_with_spacing(grid, "Xebq2 Heatmap", "XEB Error Rate", cmap='viridis')
-
-
-# # 使用示例：
-# file_path = "Baihua_egm_data_20250101_143255.json"  # 替换为实际的 JSON 文件路径
-# visualizer = VisualPlot(file_path)
-# visualizer.plot_rbq1(grid_size=(5, 5))
-# visualizer.plot_xebq1(grid_size=(5, 5))
-# visualizer.plot_csbq1(grid_size=(5, 5))
-# visualizer.plot_rbq2()
-# visualizer.plot_xebq2()

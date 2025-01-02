@@ -1,11 +1,30 @@
-import numpy as np
-from scipy.optimize import curve_fit
-import itertools
+# Third-party imports
+import numpy as np  # For numerical operations
 import scipy
+from scipy import optimize  # For optimization tasks
+from scipy.optimize import curve_fit  # For fitting functions to data
 
+# Standard library imports
+import itertools  # For efficient looping and combinatorics
 
 
 class MetricQuality:
+
+    """
+    A class for benchmarking the quality of quantum gates and circuits.
+
+    Supported Methods:
+        1. **Randomized Benchmarking (RB)**: Measures gate error rates.
+        2. **Cross-Entropy Benchmarking (XEB)**: Evaluates gate fidelity.
+        3. **Channel Spectrum Benchmarking (CSB)**: Analyzes channel spectral properties to detect coherent errors.
+        4. **Multi-Qubit Benchmarks**: Includes GHZ state preparation, 
+           Mirror Randomized Benchmarking (MRB), and Standard Quantum Volume (SQV).
+
+    Features:
+        - Supports single, two, and multi-qubit gate quality analysis.
+        - Compatible with flexible circuit generation tools.
+    """
+
     def __init__(self, all_results):
         """
         Initializes the MetricQuality class.

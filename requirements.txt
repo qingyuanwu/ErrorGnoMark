@@ -1,28 +1,14 @@
 # Core dependencies
-numpy==1.23.5
-scipy==1.9.3
-qiskit==0.39.0
-qiskit-aer==0.13.0
-tqdm==4.64.0
-requests==2.28.1
-joblib==1.2.0
-matplotlib==3.7.1
-pandas==1.5.3
+numpy>=1.23,<2.0         # Numerical computations
+scipy>=1.9,<2.0          # Scientific and advanced mathematics
+matplotlib>=3.7,<4.0     # Data visualization
 
-# Qiskit specific packages
-qiskit-ignis==0.8.0
-qiskit-terra==0.23.0
-qiskit-primitives==0.1.0
+# Quantum framework
+qiskit>=0.39,<1.0        # Quantum circuit generation (used only for circuit creation; any language could theoretically be used)
+qiskit-aer>=0.13,<1.0    # Quantum circuit simulation (optional)
 
-# Qiskit visualization tools
-qiskit-visualization==0.2.1
+# Utility dependencies
+tqdm>=4.64,<5.0          # Progress bar for tasks
+requests>=2.28,<3.0      # HTTP requests for API integration
+joblib>=1.2,<2.0         # Parallel processing and caching
 
-# Quantum optimization and benchmarking
-qiskit-aqua==0.9.5
-
-# For managing environment variables
-python-dotenv==0.21.0
-
-# Optional for error correction and simulation tools
-# If `errorgnomark` is a custom module, ensure it is in your PYTHONPATH, or install it using:
-# pip install -e ./path_to_your_local_errorgnomark/

@@ -1,28 +1,27 @@
-import warnings
-import time
-import re
+# Standard library imports
 import random
-from requests.exceptions import RequestException, ReadTimeout
+import re
+import time
+import warnings
+from requests.exceptions import RequestException, ReadTimeout  # For HTTP requests and error handling
 
-import numpy as np
-from qiskit import QuantumCircuit, qasm2, transpile
-from qiskit_aer import AerSimulator
-from qiskit_aer.noise import (
-    NoiseModel,
-    QuantumError,
-    amplitude_damping_error,
-    phase_damping_error,
-    depolarizing_error
+# Third-party library imports
+import numpy as np  # For numerical operations
+from qiskit import QuantumCircuit, qasm2, transpile  # For quantum circuit creation and transpilation
+from qiskit.circuit.library import (  # Common quantum gates
+    CXGate, CZGate, HGate, IGate, RXGate, RYGate, RZGate,
+    SwapGate, XGate, YGate, ZGate
 )
-from qiskit.circuit.library import (
-    IGate, XGate, YGate, ZGate, RXGate, RYGate, RZGate,
-    HGate, CXGate, CZGate, SwapGate
+from qiskit_aer import AerSimulator  # For quantum circuit simulation
+from qiskit_aer.noise import (  # Noise modeling for simulations
+    NoiseModel, QuantumError, amplitude_damping_error,
+    depolarizing_error, phase_damping_error
 )
-from qiskit_aer.noise.errors.quantum_error import NoiseError
+from qiskit_aer.noise.errors.quantum_error import NoiseError  # For handling quantum errors
 
-from errorgnomark.fake_data import generate_fake_data_rbq1, generate_fake_data_rbq2
-from quark import Task
-
+# Local imports
+from errorgnomark.fake_data import generate_fake_data_rbq1, generate_fake_data_rbq2  # Fake data generation
+from quark import Task  # Custom task handling for ErrorGnoMark
 
 # Suppress unnecessary warnings related to multiple results
 warnings.filterwarnings(
@@ -241,8 +240,6 @@ class QuantumJobRunner:
                 return generate_fake_data_rbq1()
             elif use_fake_data == 'fake_dataq2':
                 return generate_fake_data_rbq2()
-
-        token = "5vtENo5IEGViJNv:nmgYuZ:ehMobWzUd6qcu7pMeSZW/Rg{dUPyBkO{5DO{BEP4VkO{dUN7JDd5WnJtJDOyp{O1pEOyBjNy1jNy1DOzBkNjpkJ1GXbjxjJvOnMkGnM{mXdiKHRliYbii3ZjpkJzW3d2Kzf"
         tmgr = Task(token)
         backend = self.select_best_chip(tmgr)
 

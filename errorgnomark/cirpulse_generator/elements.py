@@ -1,13 +1,11 @@
-import random
-from qiskit import QuantumCircuit,transpiler
-import qiskit
-import numpy as np
+# Standard library imports
+import random  # For generating random numbers
 
-import random
-from qiskit import QuantumCircuit
+# Third-party imports
+import numpy as np  # For numerical operations
+from qiskit import QuantumCircuit, transpile  # For creating and transpiling quantum circuits
+import qiskit  # General Qiskit library
 
-import random
-from qiskit import QuantumCircuit
 
 class CliffordGateSet:
     """

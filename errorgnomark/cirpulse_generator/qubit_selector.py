@@ -1,13 +1,46 @@
 class chip:
     """
     Represents a quantum chip with a 2D grid of qubits.
+
+    This class provides the basic structure of a quantum chip, 
+    defined by the number of rows and columns. It serves as 
+    the foundation for qubit selection and connectivity in a 
+    quantum system.
+
+    Attributes:
+        rows (int): Number of rows in the chip grid.
+        columns (int): Number of columns in the chip grid.
     """
+
     def __init__(self, rows=10, columns=10):
         self.rows = rows
         self.columns = columns
 
 
 class qubit_selection:
+
+    """
+    Selects qubits and their connectivity from a quantum chip based on specified constraints.
+
+    Parameters:
+        chip (chip): An instance of the `chip` class, defining the chip layout.
+        qubit_index_max (int): Maximum allowable qubit index (default: 50).
+        qubit_number (int): Number of qubits to select (default: 9).
+        option (dict, optional): Selection options, including:
+            - "max_qubits_per_row" (int): Maximum number of qubits per row.
+            - "min_qubit_index" (int): Minimum allowable qubit index.
+            - "max_qubit_index" (int): Maximum allowable qubit index.
+
+    Methods:
+        quselected():
+            Returns selected qubit indices and their connectivity as a dictionary.
+            Visualizes the selected qubits and connections on the chip grid.
+
+    Features:
+        - Adapts qubit selection based on chip layout and constraints.
+        - Ensures logical connectivity for selected qubits.
+    """
+
     def __init__(self, chip, qubit_index_max=50, qubit_number=9, option=None):
         self.chip = chip
         self.qubit_index_max = qubit_index_max
