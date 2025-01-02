@@ -30,28 +30,37 @@ ErrorGnoMark plays a crucial role in the journey toward building a fully functio
 
 We recommend installing **ErrorGnoMark** using pip for simplicity and convenience:
 
-`pip install ErrorGnoMark`
-
+```bash
+pip install ErrorGnoMark
+```
 
 ### Installation via GitHub
 Alternatively, you can clone the repository from GitHub and install the package locally:
 
+```bash
+git clone https://github.com/BAQIS-Quantum/ErrorGnoMark`
+```
 
-`git clone https://github.com/BAQIS-Quantum/ErrorGnoMark`
-`cd ErrorGnoMark`
-`pip install -e .`
+```bash
+cd ErrorGnoMark`
+```
 
+```bash
+pip install -e
+```
 
 
 ## Running Example Programs
 
 To verify the installation, you can run example programs:
 
-`cd example`
-`QC-lmc.py`
+```bash
+cd example
+```
 
-
-
+```bash
+QC-lmc.py
+```
 
 ### Overview
 
