@@ -9,9 +9,6 @@ from datetime import datetime  # For handling date and time
 from requests.exceptions import RequestException, ReadTimeout  # For HTTP requests and error handling
 from tqdm import tqdm  # For progress bar visualization
 
-# Add the ErrorGnoMark package to the system path
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')  # Adjust the path to your system's setup
-
 # Local imports
 from errorgnomark.cirpulse_generator.qubit_selector import qubit_selection, chip  # For qubit selection and chip setup
 from errorgnomark.configuration import (  # For various quality and benchmarking configurations

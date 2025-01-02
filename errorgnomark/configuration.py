@@ -15,7 +15,6 @@ from qiskit_aer import AerSimulator  # For simulating quantum circuits
 from qiskit.primitives import Estimator  # For estimating circuit properties
 
 # ErrorGnoMark-specific imports
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')  # Add local project path
 from errorgnomark.cirpulse_generator.circuit_generator import CircuitGenerator  # For circuit generation
 from errorgnomark.execute import QuantumJobRunner  # For executing quantum jobs
 from errorgnomark.data_analysis.layer_cirgate import MetricQuality, MetricSpeed  # For analyzing circuit metrics

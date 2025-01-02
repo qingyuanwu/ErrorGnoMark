@@ -4,7 +4,9 @@ import random  # For generating random numbers
 # Third-party imports
 import numpy as np  # For numerical operations
 from qiskit import QuantumCircuit, transpile  # For creating and transpiling quantum circuits
-import qiskit  # General Qiskit library
+from qiskit.circuit.library import CZGate, RXGate, RYGate, RZGate  # For specific quantum gates
+from qiskit.circuit import Gate  # For general gate operations
+from qiskit.quantum_info import Operator, random_unitary  # For quantum information utilities
 
 
 class CliffordGateSet:
@@ -147,27 +149,22 @@ class CliffordGateSet:
         return qc
 
 
-# errorgnomark/cirpulse_generator/elements.py
 
-import random
-from qiskit.circuit.library import CZGate, RXGate, RYGate, RZGate
-from qiskit.circuit import Gate
-
-# 定义可能的旋转角度（弧度）
+# Define possible rotation angles (in radians)
 ROTATION_ANGLES = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75]
 
-# 定义可用的单量子比特旋转轴
+# Define available single-qubit rotation axes
 SINGLE_QUBIT_GATES = ['rx', 'ry', 'rz']
 
-# 定义两量子比特门（CZGate）实例
+# Define the two-qubit gate (CZGate) instance
 CZ_GATE = CZGate()
 
 def get_random_rotation_gate():
     """
-    随机选择一个单量子比特旋转门及其旋转角度。
+    Randomly select a single-qubit rotation gate and its rotation angle.
 
-    返回:
-        Gate: 随机选择的旋转门实例。
+    Returns:
+        Gate: A randomly selected rotation gate instance.
     """
     gate_type = random.choice(SINGLE_QUBIT_GATES)
     angle = random.choice(ROTATION_ANGLES)
@@ -182,41 +179,39 @@ def get_random_rotation_gate():
     return gate
 
 
-
-
 class csbq1_circuit_generator:
     def __init__(self, rot_axis='x', rot_angle=np.pi / 2, rep=1):
         """
-        初始化 CSB Q1 电路生成器。
+        Initialize the CSB Q1 circuit generator.
 
-        参数:
-            rot_axis (str): 旋转轴，可以是 'x'、'y' 或 'z'。
-            rot_angle (float): 目标旋转门的旋转角度。
-            rep (int): 目标旋转门的重复次数。
+        Parameters:
+            rot_axis (str): Rotation axis, can be 'x', 'y', or 'z'.
+            rot_angle (float): Rotation angle for the target rotation gate.
+            rep (int): Number of repetitions for the target rotation gate.
         """
         if rot_axis not in ['x', 'y', 'z']:
-            raise ValueError("rot_axis 必须是 'x'、'y' 或 'z' 之一。")
+            raise ValueError("rot_axis must be one of 'x', 'y', or 'z'.")
         self.rot_axis = rot_axis
         self.rot_angle = rot_angle
         self.rep = rep
 
     def csbq1_circuit(self, lc, ini_mode, qubit_indices=[0]):
         """
-        根据指定的电路长度和初始模式生成 CSB Q1 电路。
+        Generate a CSB Q1 circuit based on the specified circuit length and initial mode.
 
-        参数:
-            lc (int): 电路长度（深度）。
-            ini_mode (str): 初始状态模式，可以是 'x'、'y' 或 'z'。
-            qubit_indices (list): 作用的量子比特索引列表，可以是任意长度的列表。
+        Parameters:
+            lc (int): Circuit length (depth).
+            ini_mode (str): Initial state mode, can be 'x', 'y', or 'z'.
+            qubit_indices (list): List of qubit indices, can be of arbitrary length.
 
-        返回:
-            QuantumCircuit: 生成的量子电路。
+        Returns:
+            QuantumCircuit: The generated quantum circuit.
         """
-        # 确保电路的量子比特数与 qubit_indices 的长度一致
+        # Ensure the number of qubits matches the length of qubit_indices
         num_qubits = len(qubit_indices)
         qc = QuantumCircuit(num_qubits, num_qubits)
 
-        # 初始状态准备
+        # Prepare the initial state
         if ini_mode == 'x':
             for q in qubit_indices:
                 qc.h(q)
@@ -228,10 +223,10 @@ class csbq1_circuit_generator:
             for q in qubit_indices:
                 qc.x(q)
         else:
-            raise ValueError("ini_mode 必须是 'x'、'y' 或 'z' 之一。")
+            raise ValueError("ini_mode must be one of 'x', 'y', or 'z'.")
         qc.barrier()
-        
-        # 重复应用目标旋转门
+
+        # Apply the target rotation gate repeatedly
         for _ in range(lc * self.rep):
             for q in qubit_indices:
                 if self.rot_axis == 'x':
@@ -241,8 +236,8 @@ class csbq1_circuit_generator:
                 elif self.rot_axis == 'z':
                     qc.rz(self.rot_angle, q)
         qc.barrier()
-        
-        # 逆操作以返回计算基态
+
+        # Apply inverse operations to return to the computational basis
         if ini_mode == 'x':
             for q in qubit_indices:
                 qc.h(q)
@@ -254,59 +249,59 @@ class csbq1_circuit_generator:
             for q in qubit_indices:
                 qc.x(q)
         qc.barrier()
-        
-        # 测量
+
+        # Measurement
         qc.measure(qubit_indices, qubit_indices)
         return qc
 
     def x_direction_csbcircuit_pi_over_2(self, lc, ini_mode, qubit_indices=[0]):
         """
-        生成一个 x 方向旋转 π/2 的 CSB 电路。
+        Generate a CSB circuit with x-direction rotation by π/2.
 
-        参数:
-            lc (int): 电路长度（深度）。
-            ini_mode (str): 初始状态模式，可以是 'x'、'y' 或 'z'。
-            qubit_indices (list): 作用的量子比特索引列表。
+        Parameters:
+            lc (int): Circuit length (depth).
+            ini_mode (str): Initial state mode, can be 'x', 'y', or 'z'.
+            qubit_indices (list): List of qubit indices.
 
-        返回:
-            QuantumCircuit: 生成的量子电路。
+        Returns:
+            QuantumCircuit: The generated quantum circuit.
         """
         return self.csbq1_circuit(lc, ini_mode, qubit_indices)
 
     def generate_csbcircuit_for_gate(self, gate_name, lc, ini_mode, qubit_indices=[0]):
         """
-        根据输入的量子门名称生成对应的 CSB 电路。
+        Generate a CSB circuit for the specified quantum gate.
 
-        参数:
-            gate_name (str): 量子门的名称，例如 'XGate', 'YGate', 'ZGate', 'IdGate', 'WGate', 'HGate', 'SGate'。
-            lc (int): 电路长度（深度）。
-            ini_mode (str): 初始状态模式，可以是 'x'、'y' 或 'z'。
-            qubit_indices (list): 作用的量子比特索引列表。
+        Parameters:
+            gate_name (str): Name of the quantum gate, e.g., 'XGate', 'YGate', 'ZGate', 'IdGate', 'WGate', 'HGate', 'SGate'.
+            lc (int): Circuit length (depth).
+            ini_mode (str): Initial state mode, can be 'x', 'y', or 'z'.
+            qubit_indices (list): List of qubit indices.
 
-        返回:
-            QuantumCircuit: 生成的量子电路。
+        Returns:
+            QuantumCircuit: The generated quantum circuit.
         """
         gate_mapping = {
             'XGate': {'rot_axis': 'x', 'rot_angle': np.pi},
             'YGate': {'rot_axis': 'y', 'rot_angle': np.pi},
             'ZGate': {'rot_axis': 'z', 'rot_angle': np.pi},
             'IdGate': {'rot_axis': 'x', 'rot_angle': 0},
-            'WGate': {'rot_axis': 'x', 'rot_angle': np.pi / 4},  # 假设 WGate 对应 RX(pi/4)
-            'HGate': {'rot_axis': 'x', 'rot_angle': np.pi / 2},  # 假设 HGate 对应 RX(pi/2)
+            'WGate': {'rot_axis': 'x', 'rot_angle': np.pi / 4},  # Assume WGate corresponds to RX(pi/4)
+            'HGate': {'rot_axis': 'x', 'rot_angle': np.pi / 2},  # Assume HGate corresponds to RX(pi/2)
             'SGate': {'rot_axis': 'z', 'rot_angle': np.pi / 2}
         }
 
         if gate_name not in gate_mapping:
-            raise ValueError(f"不支持的门名称: {gate_name}")
+            raise ValueError(f"Unsupported gate name: {gate_name}")
 
         rot_axis = gate_mapping[gate_name]['rot_axis']
         rot_angle = gate_mapping[gate_name]['rot_angle']
 
-        # 创建一个新的实例，设置对应的旋转轴和旋转角度
+        # Create a new instance with the corresponding rotation axis and angle
         csb_gen = csbq1_circuit_generator(rot_axis=rot_axis, rot_angle=rot_angle, rep=self.rep)
         return csb_gen.csbq1_circuit(lc, ini_mode, qubit_indices)
 
-    # 可选：为每个门定义独立的方法
+    # Optional: Define individual methods for each gate
     def XGate_csbcircuit(self, lc, ini_mode, qubit_indices=[0]):
         return self.generate_csbcircuit_for_gate('XGate', lc, ini_mode, qubit_indices)
 
@@ -329,127 +324,117 @@ class csbq1_circuit_generator:
         return self.generate_csbcircuit_for_gate('SGate', lc, ini_mode, qubit_indices)
 
 
-from qiskit.quantum_info import Operator
-from qiskit import transpile
-
 class Csbq2_cz_circuit_generator:
     def __init__(self, theta=np.pi):
-        self.theta = theta  # 控制-Z 门的相位参数 theta
-        self.eigval_list = [1, np.exp(1j * theta), np.exp(1j * theta), 1]  # 本征值列表
+        self.theta = theta  # Phase parameter for the controlled-Z gate
+        self.eigval_list = [1, np.exp(1j * theta), np.exp(1j * theta), 1]  # Eigenvalue list
         self.eigvec_list = [
-            np.array([1, 0, 0, 0]),  # |00> 本征态
-            np.array([0, 0, 0, 1]),  # |11> 本征态
-            1 / np.sqrt(2) * np.array([0, 1, 1, 0]),  # (|01> + |10>) 本征态
-            1 / np.sqrt(2) * np.array([0, 1, -1, 0])   # (|01> - |10>) 本征态
+            np.array([1, 0, 0, 0]),  # |00> eigenstate
+            np.array([0, 0, 0, 1]),  # |11> eigenstate
+            1 / np.sqrt(2) * np.array([0, 1, 1, 0]),  # (|01> + |10>) eigenstate
+            1 / np.sqrt(2) * np.array([0, 1, -1, 0])  # (|01> - |10>) eigenstate
         ]
 
     def prepare_initial_state(self, qc, mode, qubit_indices=[0, 1]):
-        q0, q1 = qubit_indices  # 解包 qubit_indices 为量子比特索引
+        """
+        Prepare the initial state based on the specified mode.
+        """
+        q0, q1 = qubit_indices
         if mode == '01':
-            # 准备 (|00> + |11>)/sqrt(2)
             qc.h(q0)
             qc.cx(q0, q1)
         elif mode == '02':
-            # 准备 (|01> + |10>)/sqrt(2)
             qc.h(q0)
             qc.cx(q0, q1)
             qc.h(q0)
         elif mode == '03':
-            # 准备 (|01> - |10>)/sqrt(2)
             qc.h(q0)
             qc.cx(q0, q1)
             qc.h(q0)
             qc.sdg(q1)
         elif mode == '12':
-            # 假设 '12' 对应 (|00> + |11>)/sqrt(2) + (|01> + |10>)/sqrt(2)
             qc.h(q0)
             qc.cx(q0, q1)
             qc.h(q1)
         elif mode == '13':
-            # 假设 '13' 对应 (|00> + |11>)/sqrt(2) + (|01> - |10>)/sqrt(2)
             qc.h(q0)
             qc.cx(q0, q1)
             qc.h(q1)
             qc.sdg(q1)
         elif mode == '23':
-            # 准备 |01>
             qc.x(q1)
         else:
             raise ValueError(f"Unknown mode: {mode}")
 
     def prepare_inverse_initial_state(self, qc, mode, qubit_indices=[0, 1]):
-        q0, q1 = qubit_indices  # 解包 qubit_indices 为量子比特索引
+        """
+        Apply the inverse operation of the initial state preparation.
+        """
+        q0, q1 = qubit_indices
         if mode == '01':
-            # 逆操作 (|00> + |11>)/sqrt(2)
             qc.cx(q0, q1)
             qc.h(q0)
         elif mode == '02':
-            # 逆操作 (|01> + |10>)/sqrt(2)
             qc.h(q0)
             qc.cx(q0, q1)
             qc.h(q0)
         elif mode == '03':
-            # 逆操作 (|01> - |10>)/sqrt(2)
             qc.s(q1)
             qc.h(q0)
             qc.cx(q0, q1)
             qc.h(q0)
         elif mode == '12':
-            # 逆操作 (假设对应 '12' 模式的准备)
             qc.h(q1)
             qc.cx(q0, q1)
             qc.h(q0)
         elif mode == '13':
-            # 逆操作 (假设对应 '13' 模式的准备)
             qc.s(q1)
             qc.h(q1)
             qc.cx(q0, q1)
             qc.h(q0)
         elif mode == '23':
-            # 逆操作 |01>
             qc.x(q1)
         else:
             raise ValueError(f"Unknown mode: {mode}")
 
     def csbq2_cz_circuit(self, len_list, mode='01', nrep=1, qubit_indices=[0, 1]):
-        """生成并返回二比特 CZ 电路的列表，量子比特索引可以自定义。"""
+        """
+        Generate and return a list of two-qubit CZ circuits with customizable qubit indices.
+        """
         circ_list = []
 
-        # 计算量子比特数量（最大索引 + 1）
         max_qubit = max(qubit_indices) + 1
 
-        # 初始状态准备
-        qc_ini = QuantumCircuit(max_qubit, max_qubit)  # 创建一个大小为 max_qubit 的量子电路
+        # Prepare the initial state
+        qc_ini = QuantumCircuit(max_qubit, max_qubit)
         self.prepare_initial_state(qc_ini, mode, qubit_indices)
-        qc_ini.barrier()  # 添加障碍
+        qc_ini.barrier()
 
-        # 定义 CZ gate
+        # Define CZ gate
         cz_gate = CZGate()
 
-        # 定义逆准备操作
+        # Define the inverse preparation operation
         qc_ini_inverse = QuantumCircuit(max_qubit, max_qubit)
         self.prepare_inverse_initial_state(qc_ini_inverse, mode, qubit_indices)
 
         for lc in len_list:
-            qc_rep = QuantumCircuit(max_qubit, max_qubit)  # 根据最大量子比特索引创建电路
-            for k in range(lc * nrep):
-                # 正确使用 append 来添加 CZ 门操作
-                qc_rep.append(cz_gate, qubit_indices)  # 添加 CZ 门到量子电路
+            qc_rep = QuantumCircuit(max_qubit, max_qubit)
+            for _ in range(lc * nrep):
+                qc_rep.append(cz_gate, qubit_indices)
 
-            # 组合初始准备电路和重复电路
-            qc = qc_ini.compose(qc_rep)  # 使用 compose 来连接电路
+            # Combine the initial preparation circuit and repeated circuit
+            qc = qc_ini.compose(qc_rep)
 
-            # 添加逆操作以恢复初始状态
-            qc = qc.compose(qc_ini_inverse)  # 添加 qc_ini_inverse
+            # Add the inverse operation to return to the initial state
+            qc = qc.compose(qc_ini_inverse)
 
-            # 添加测量电路
-            qc.measure(qubit_indices, qubit_indices)  # 使用动态的 qubit_indices
+            # Add measurement
+            qc.measure(qubit_indices, qubit_indices)
 
-            # 添加调试信息，确保 qc 是 QuantumCircuit
-            # print(f"Appending circuit of type: {type(qc)}")  # 应该是 <class 'qiskit.circuit.quantumcircuit.QuantumCircuit'>
-            circ_list.append(qc)  # 将电路添加到电路列表
+            circ_list.append(qc)
 
         return circ_list
+
 
 
 def permute_qubits(num_qubits):
@@ -459,9 +444,7 @@ def permute_qubits(num_qubits):
     rng = np.random.default_rng()
     return list(rng.permutation(num_qubits))
 
-import numpy as np
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import random_unitary
+
 
 def apply_random_su4_layer(qc, num_qubits):
     """
