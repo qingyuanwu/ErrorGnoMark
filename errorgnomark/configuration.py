@@ -19,8 +19,6 @@ from errorgnomark.cirpulse_generator.circuit_generator import CircuitGenerator  
 from errorgnomark.execute import QuantumJobRunner  # For executing quantum jobs
 from errorgnomark.data_analysis.layer_cirgate import MetricQuality, MetricSpeed  # For analyzing circuit metrics
 
-# ErrorGnoMark-specific imports
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark') 
 
 class QualityQ1Gate:
     def __init__(self, qubit_index_list, result_get='hardware'):

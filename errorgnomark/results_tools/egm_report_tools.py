@@ -7,8 +7,6 @@ import sys
 # Third-party imports
 import matplotlib.pyplot as plt  # For creating visualizations
 
-# ErrorGnoMark-specific imports
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark') 
 
 # ErrorGnoMark-specific imports
 from errorgnomark.results_tools.visualization import VisualPlot  # For generating visual plots

@@ -9,8 +9,6 @@ from datetime import datetime  # For handling date and time
 from requests.exceptions import RequestException, ReadTimeout  # For HTTP requests and error handling
 from tqdm import tqdm  # For progress bar visualization
 
-# Add the ErrorGnoMark package to the system path
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')
 # Local imports
 from errorgnomark.cirpulse_generator.qubit_selector import qubit_selection, chip  # For qubit selection and chip setup
 from errorgnomark.configuration import (  # For various quality and benchmarking configurations
@@ -277,28 +275,28 @@ class Errorgnomarker(chip):
 
 
 
-from errorgnomark.token_manager import define_token, get_token
-# Define your token
-token = "5vtENo5IEGViJNv:nmgYuZ:ehMobWzUd6qcu7pMeSZW/Rg{dUPyBkO{5DO{BEP4VkO{dUN7JDd5WnJtJDOyp{O1pEOyBjNy1jNy1DOzBkNjpkJ1GXbjxjJvOnMkGnM{mXdiKHRliYbii3ZjpkJzW3d2Kzf"
+# from errorgnomark.token_manager import define_token, get_token
+# # Define your token
+# token = ""
 
-define_token(token)
+# define_token(token)
 
-# Retrieve the token if needed
-token = get_token()
+# # Retrieve the token if needed
+# token = get_token()
 
 
-# Example usage:
-if __name__ == "__main__":
-    egm = Errorgnomarker(chip_name="Baihua",result_get='hardware')
-    egm.egm_run(
-    visual_table=True, 
-    visual_figure=True, 
-    q1rb_selected =True, 
-    q1xeb_selected=False,          
-    q1csbp2x_selected=False,      
-    q2rb_selected=False,           
-    qmgate_ghz_selected=False,     
-    qmgate_stqv_selected=False,    
-    qmgate_mrb_selected=False,    
-    qmgate_clops_selected=False,  
-    qmgate_vqe_selected=False )    
+# # Example usage:
+# if __name__ == "__main__":
+#     egm = Errorgnomarker(chip_name="Baihua",result_get='hardware')
+#     egm.egm_run(
+#     visual_table=True, 
+#     visual_figure=True, 
+#     q1rb_selected =True, 
+#     q1xeb_selected=False,          
+#     q1csbp2x_selected=False,      
+#     q2rb_selected=False,           
+#     qmgate_ghz_selected=False,     
+#     qmgate_stqv_selected=False,    
+#     qmgate_mrb_selected=False,    
+#     qmgate_clops_selected=False,  
+#     qmgate_vqe_selected=False )    

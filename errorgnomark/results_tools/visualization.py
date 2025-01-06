@@ -5,8 +5,7 @@ import sys
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-# ErrorGnoMark-specific imports
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark') 
+
 class VisualPlot:
     """
     A class for visualizing quantum benchmarking metrics stored in a JSON file.
