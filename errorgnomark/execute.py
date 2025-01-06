@@ -4,7 +4,7 @@ import re
 import time
 import warnings
 from requests.exceptions import RequestException, ReadTimeout  # For HTTP requests and error handling
-
+import sys
 # Third-party library imports
 import numpy as np  # For numerical operations
 from qiskit import QuantumCircuit, qasm2, transpile  # For quantum circuit creation and transpilation
@@ -20,6 +20,8 @@ from qiskit_aer.noise import (  # Noise modeling for simulations
 from qiskit_aer.noise.errors.quantum_error import NoiseError  # For handling quantum errors
 
 # Local imports
+# ErrorGnoMark-specific imports
+sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark') 
 from errorgnomark.fake_data import generate_fake_data_rbq1, generate_fake_data_rbq2  # Fake data generation
 from quark import Task  # Custom task handling for ErrorGnoMark
 
@@ -202,104 +204,113 @@ class QuantumJobRunner:
         return min(available_chips, key=available_chips.get)
 
     def quarkstudio_run(
-        self,
-        compile=True,
-        shots=1,
-        print_progress=True,
-        use_fake_data=None,
-        delay_between_tasks=2,
-        max_retries=3,
-        elapsed_time=False
-    ):
-        """
-        Runs quantum circuits either on real hardware or generates fake data.
+            self,
+            compile=False,
+            shots=1,
+            print_progress=True,
+            use_fake_data=None,
+            delay_between_tasks=2,
+            max_retries=3,
+            elapsed_time=False
+        ):
+            """
+            Runs quantum circuits either on real hardware or generates fake data.
 
-        Parameters:
-            compile (bool): Whether to transpile the circuit to native gate sets. Default is True.
-            shots (int): Number of shots per circuit. Default is 1.
-            print_progress (bool): Whether to print progress updates. Default is False.
-            use_fake_data (str or None): 
-                None: Execute on real hardware.
-                'fake_dataq1': 1-qubit fake data.
-                'fake_dataq2': 2-qubit fake data.
-            delay_between_tasks (int): Seconds to wait after completing a task before submitting the next one. Default is 2 seconds.
-            max_retries (int): Maximum number of retries for submitting a task. Default is 3.
-            elapsed_time (bool): Whether to return elapsed times along with execution results. Default is False.
+            Parameters:
+                compile (bool): Whether to transpile the circuit to native gate sets. Default is True.
+                shots (int): Number of shots per circuit. Default is 1.
+                print_progress (bool): Whether to print progress updates. Default is False.
+                use_fake_data (str or None): 
+                    None: Execute on real hardware.
+                    'fake_dataq1': 1-qubit fake data.
+                    'fake_dataq2': 2-qubit fake data.
+                delay_between_tasks (int): Seconds to wait after completing a task before submitting the next one. Default is 2 seconds.
+                max_retries (int): Maximum number of retries for submitting a task. Default is 3.
+                elapsed_time (bool): Whether to return elapsed times along with execution results. Default is False.
 
-        Returns:
-            list or tuple:
-                - If elapsed_time=False: List of measurement count dictionaries or fake data structure.
-                - If elapsed_time=True: Tuple containing the list of measurement counts and the list of elapsed times.
-        """
+            Returns:
+                list or tuple:
+                    - If elapsed_time=False: List of measurement count dictionaries or fake data structure.
+                    - If elapsed_time=True: Tuple containing the list of measurement counts and the list of elapsed times.
+            """
 
-        if use_fake_data not in [None, 'fake_dataq1', 'fake_dataq2']:
-            raise ValueError("Invalid use_fake_data value. Must be one of [None, 'fake_dataq1', 'fake_dataq2'].")
+            if use_fake_data not in [None, 'fake_dataq1', 'fake_dataq2']:
+                raise ValueError("Invalid use_fake_data value. Must be one of [None, 'fake_dataq1', 'fake_dataq2'].")
 
-        if use_fake_data:
-            if use_fake_data == 'fake_dataq1':
-                return generate_fake_data_rbq1()
-            elif use_fake_data == 'fake_dataq2':
-                return generate_fake_data_rbq2()
-        tmgr = Task(token)
-        backend = self.select_best_chip(tmgr)
+            if use_fake_data:
+                if use_fake_data == 'fake_dataq1':
+                    return generate_fake_data_rbq1()
+                elif use_fake_data == 'fake_dataq2':
+                    return generate_fake_data_rbq2()
+            
+            # token = "5vtENo5IEGViJNv:nmgYuZ:ehMobWzUd6qcu7pMeSZW/Rg{dUPyBkO{5DO{BEP4VkO{dUN7JDd5WnJtJDOyp{O1pEOyBjNy1jNy1DOzBkNjpkJ1GXbjxjJvOnMkGnM{mXdiKHRliYbii3ZjpkJzW3d2Kzf"
+            tmgr = Task(token)
+            # backend = self.select_best_chip(tmgr)
+            backend = 'Baihua'
+            if print_progress:
+                print(f"Selected backend: {backend}")
 
-        task_results = []
-        elapsed_times = []
+            task_results = []
+            elapsed_times = []
 
-        for idx, circuit in enumerate(self.circuits):
-            # if print_progress:
-            #     print(f"Running circuit {idx+1}/{len(self.circuits)}")
+            for idx, circuit in enumerate(self.circuits):
+                if print_progress:
+                    print(f"Running circuit {idx+1}/{len(self.circuits)}...")
 
-            openqasm_circuit = self.qiskit_to_openqasm(circuit) if isinstance(circuit, QuantumCircuit) else circuit
+                openqasm_circuit = self.qiskit_to_openqasm(circuit) if isinstance(circuit, QuantumCircuit) else circuit
 
-            task = {
-                'chip': backend,
-                'name': 'QuantumTask',
-                'circuit': openqasm_circuit,
-                'compile': compile,
-                'correct': False
-            }
+                task = {
+                    'chip': backend,
+                    'name': 'QuantumTask',
+                    'circuit': openqasm_circuit,
+                    'compile': compile,
+                    'correct': False
+                }
 
-            attempt = 0
-            while attempt < max_retries:
-                try:
-                    tid = tmgr.run(task, repeat=shots)
-                    break
-                except RequestException:
-                    attempt += 1
-                    wait_time = 2 ** attempt
-                    time.sleep(wait_time)
+                attempt = 0
+                while attempt < max_retries:
+                    try:
+                        if print_progress:
+                            print(f"Submitting task for circuit {idx+1}, attempt {attempt+1}...")
+                        tid = tmgr.run(task, repeat=shots)
+                        break
+                    except RequestException:
+                        attempt += 1
+                        wait_time = 2 ** attempt
+                        time.sleep(wait_time)
+                else:
+                    task_results.append({})
+                    if elapsed_time:
+                        elapsed_times.append(0.0)
+                    continue
+
+                while True:
+                    try:
+                        time.sleep(10)
+                        res = tmgr.result(tid)
+
+                        if res and 'status' in res:
+                            status = res['status'].lower()
+                            if print_progress:
+                                print(f"Task {tid} status: {status}")
+                            if status == 'finished':
+                                counts = res.get('count', {})
+                                task_results.append(counts)
+
+                                if elapsed_time:
+                                    task_elapsed_time = res.get('elapsed_time', 0.0)
+                                    elapsed_times.append(task_elapsed_time)
+                                break
+                    except (ReadTimeout, RequestException):
+                        time.sleep(5)
+
+                if delay_between_tasks > 0:
+                    time.sleep(delay_between_tasks)
+            
+            if elapsed_time:
+                return task_results, np.mean(elapsed_times)
             else:
-                task_results.append({})
-                if elapsed_time:
-                    elapsed_times.append(0.0)
-                continue
-
-            while True:
-                try:
-                    time.sleep(10)
-                    res = tmgr.result(tid)
-
-                    if res and 'status' in res:
-                        status = res['status'].lower()
-                        if status == 'finished':
-                            counts = res.get('count', {})
-                            task_results.append(counts)
-
-                            if elapsed_time:
-                                task_elapsed_time = res.get('elapsed_time', 0.0)
-                                elapsed_times.append(task_elapsed_time)
-                            break
-                except (ReadTimeout, RequestException):
-                    time.sleep(5)
-
-            if delay_between_tasks > 0:
-                time.sleep(delay_between_tasks)
-
-        if elapsed_time:
-            return task_results, np.mean(elapsed_times)
-        else:
-            return task_results
+                return task_results
 
 
     def simulation_ideal_qiskit(

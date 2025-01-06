@@ -49,6 +49,12 @@ cd ErrorGnoMark`
 pip install -e
 ```
 
+### Upgrade to the Latest Version
+To ensure you are using the latest features and improvements, update ErrorGnoMark with:
+```bash
+pip install --upgrade ErrorGnoMark
+```
+
 
 ## Running Example Programs
 
@@ -120,5 +126,5 @@ ErrorGnoMark is licensed under the Apache License.
 
 ### Releases
 
-No releases published.
+This project follows a systematic release process to ensure users always have access to the latest stable version.
 

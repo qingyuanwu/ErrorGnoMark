@@ -23,7 +23,7 @@ class qubit_selection:
     Selects qubits and their connectivity from a quantum chip based on specified constraints.
 
     Parameters:
-        chip (chip): An instance of the `chip` class, defining the chip layout.
+        chip (chip): An instance of the chip class, defining the chip layout.
         qubit_index_max (int): Maximum allowable qubit index (default: 50).
         qubit_number (int): Number of qubits to select (default: 9).
         option (dict, optional): Selection options, including:
@@ -73,46 +73,30 @@ class qubit_selection:
             "qubit_connectivity": []
         }
 
-        # Iterate over all possible rectangle sizes and positions
-        for height in range(1, self.rows + 1):
-            for width in range(1, self.columns + 1):
-                # Check if the rectangle can fit within the max qubit number
-                if height * width > qubit_number:
-                    continue
+        # Select qubits row by row, left to right
+        qubit_indices = []
+        for r in range(self.rows):
+            for c in range(self.columns):
+                q = r * self.columns + c
+                if q >= min_qubit_index and q <= max_qubit_index:
+                    qubit_indices.append(q)
+                    if len(qubit_indices) == qubit_number:
+                        break
+            if len(qubit_indices) == qubit_number:
+                break
 
-                # Iterate over all possible starting positions
-                for row_start in range(self.rows - height + 1):
-                    for col_start in range(self.columns - width + 1):
-                        # Collect qubit indices in the rectangle
-                        qubit_indices = []
-                        valid = True
-                        for r in range(row_start, row_start + height):
-                            if width > max_qubits_per_row:
-                                valid = False
-                                break
-                            for c in range(col_start, col_start + width):
-                                q = r * self.columns + c
-                                if q < min_qubit_index or q > max_qubit_index:
-                                    valid = False
-                                    break
-                                qubit_indices.append(q)
-                            if not valid:
-                                break
-                        if not valid:
-                            continue
+        best_selection["qubit_index_list"] = qubit_indices
 
-                        # Check if this selection is better (more qubits) than the previous best
-                        if len(qubit_indices) > len(best_selection["qubit_index_list"]):
-                            best_selection["qubit_index_list"] = qubit_indices
+        # Create horizontal connectivity within each row
+        qubit_connectivity = []
+        for r in range(self.rows):
+            for c in range(self.columns - 1):
+                q1 = r * self.columns + c
+                q2 = r * self.columns + (c + 1)
+                if q1 in qubit_indices and q2 in qubit_indices:
+                    qubit_connectivity.append([q1, q2])
 
-                            # Create horizontal connectivity within each row
-                            qubit_connectivity = []
-                            for r in range(row_start, row_start + height):
-                                for c in range(col_start, col_start + width - 1):
-                                    q1 = r * self.columns + c 
-                                    q2 = r * self.columns + (c + 1)
-                                    qubit_connectivity.append([q1, q2])
-                            best_selection["qubit_connectivity"] = qubit_connectivity
+        best_selection["qubit_connectivity"] = qubit_connectivity
 
         # If no selection was found, return empty lists
         if not best_selection["qubit_index_list"]:

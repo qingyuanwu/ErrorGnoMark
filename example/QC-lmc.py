@@ -12,17 +12,18 @@ Notes:
 - To run on an actual chip, users need to register and provide a valid token.
 """
 
+# Step 1: Import Required Modules
 from errorgnomark import Errorgnomarker
-from errorgnomark import token_manager
+from errorgnomark.token_manager import define_token, get_token
 
-# Step 1: Initialize the ErrorGnoMarker object
 # ---------------------------------------------
+# Simulation Mode
+# ---------------------------------------------
+egm = Errorgnomarker(chip_name="QXX", result_get='noisysimulation')
 
-# Default Simulation Mode
-# By default, the Errorgnomarker class runs in simulation mode.
-egm = Errorgnomarker(chip_name="QXX")
-
+# ---------------------------------------------
 # Real Quantum Chip Mode
+# ---------------------------------------------
 # To execute tasks on real quantum hardware, follow these steps:
 
 # 1. Obtain a Token:
@@ -30,21 +31,43 @@ egm = Errorgnomarker(chip_name="QXX")
 
 # 2. Set and Use the Token:
 #    Use the token_manager module to define and retrieve your token.
-define_token("your_unique_token_here")  # Replace with your actual token
-token = get_token()  # Retrieve the token if needed
 
-# 3. Initialize the ErrorGnoMarker object in hardware mode:
+# Example:
+# Define your token
+define_token("your_unique_token_here")
+
+# Retrieve the token if needed
+token = get_token()
+
+# Initialize the ErrorGnoMarker in hardware mode
 egm = Errorgnomarker(chip_name="QXX", result_get='hardware')
 
+# ---------------------------------------------
 # Step 2: Run Diagnostics and Benchmarking
-# ----------------------------------------
+# ---------------------------------------------
+# Run the EGM metrics with selective tasks
+results = egm.egm_run(
+    egm_level='level_0',           # Set the level of detail for execution (e.g., level_0, level_1, level_2)
+    visual_table=True,             # Generate Level02 table (True/False)
+    visual_figure=True,            # Generate Level02 figures (True/False)
+    q1rb_selected=True,            # Execute Single Qubit RB (True/False)
+    q1xeb_selected=True,           # Execute Single Qubit XEB (True/False)
+    q1csbp2x_selected=False,       # Execute Single Qubit CSB (True/False)
+    q2rb_selected=True,            # Execute Two Qubit RB (True/False)
+    qmgate_ghz_selected=True,      # Execute m-Qubit GHZ Fidelity (True/False)
+    qmgate_stqv_selected=True,     # Execute m-Qubit StanQV Fidelity (True/False)
+    qmgate_mrb_selected=False,     # Execute m-Qubit MRB Fidelity (True/False)
+    qmgate_clops_selected=False,   # Execute m-Qubit Speed CLOPS (True/False)
+    qmgate_vqe_selected=False      # Execute m-Qubit VQE (True/False)
+)
 
-# This example demonstrates how to run diagnostics and benchmarking for the chip.
+# Results:
+# The results will be saved as a JSON file in the `data_egm` folder.
+# Optionally, tables and figures will be saved in their respective folders.
 
-# Options:
-# - egm_level='level_2': Retrieves detailed noise information for the chip.
-# - visual_table=True: Outputs a comprehensive diagnostic report in table format.
-# - visual_figure=True: Generates and saves visualized diagnostic results.
-
-# Users can customize the benchmarking schemes as needed. The example below uses default settings.
-egm.egm_run(egm_level='level_2', visual_table=True, visual_figure=True)
+"""
+Options:
+- egm_level='level_2': Retrieves detailed noise information for the chip.
+- visual_table=True: Outputs a comprehensive diagnostic report in table format.
+- visual_figure=True: Generates and saves visualized diagnostic results.
+"""

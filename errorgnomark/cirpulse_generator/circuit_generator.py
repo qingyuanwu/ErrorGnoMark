@@ -10,9 +10,13 @@ import copy
 # Suppress DeprecationWarnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
+
 # Third-party imports
 import numpy as np  # For numerical operations
 from qiskit import QuantumCircuit  # For creating and managing quantum circuits
+
+# ErrorGnoMark-specific imports
+sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark') 
 
 from errorgnomark.cirpulse_generator.elements import (
     ROTATION_ANGLES,
@@ -63,7 +67,7 @@ class CircuitGenerator:
     could be used in principle.
     """
 
-    def __init__(self, qubit_select, qubit_connectivity, length_max=12, step_size=2):
+    def __init__(self, qubit_select, qubit_connectivity, length_max=12, step_size=4):
         """
         Initializes the Circuit Generator.
 
@@ -79,7 +83,7 @@ class CircuitGenerator:
         self.step_size = step_size
         self.clifford_set = CliffordGateSet(backend='quarkstudio', compile=False)
 
-    def rbq1_circuit(self, ncr=30):
+    def rbq1_circuit(self, ncr=1):
         """
         Generate random 1-qubit Clifford gate circuits.
 
@@ -130,7 +134,7 @@ class CircuitGenerator:
 
         return circuits_rbq1
 
-    def rbq2_circuit(self, ncr=30):
+    def rbq2_circuit(self, ncr=1):
         """
         Generate random 2-qubit Clifford gate circuits for random benchmarking.
 
@@ -181,7 +185,7 @@ class CircuitGenerator:
 
 
 
-    def xebq1_circuit(self, ncr=30):
+    def xebq1_circuit(self, ncr=1):
         """
         Generate random 1-qubit XEB gate circuits.
 
@@ -229,7 +233,7 @@ class CircuitGenerator:
 
         return circuits_xebq1
 
-    def xebq2_circuit(self, ncr=30):
+    def xebq2_circuit(self, ncr=1):
         """
         Generate random 2-qubit XEB (cross-entropy benchmarking) gate circuits.
 
@@ -461,7 +465,7 @@ class CircuitGenerator:
         return ghz_circuits
 
 
-    def stanqvqm_circuit(self, ncr=30,nqubits_max=16):
+    def stanqvqm_circuit(self, ncr=1,nqubits_max=5):
         """
         Generate Quantum Volume (QV) circuits for each qubit count from 1 to nqubits_max.
 
@@ -504,7 +508,7 @@ class CircuitGenerator:
         return all_circuits
 
 
-    def mrbqm_circuit(self, density_cz=0.75, ncr=30):
+    def mrbqm_circuit(self, density_cz=0.75, ncr=1):
         """
         Generates quantum circuits based on the provided CZ gate density and number of circuits.
 

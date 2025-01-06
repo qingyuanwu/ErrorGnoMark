@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: ErrorGnoMark
-Version: 0.1.0
+Version: 0.1.2
 Summary: A Toolkit for Error Diagnosis and Benchmarking for Quantum Chip
 Home-page: https://github.com/BAQIS-Quantum/ErrorGnoMark
 Author: Chai Xudan, Wang Jingbo, Xiaoxiao
@@ -76,6 +76,12 @@ cd ErrorGnoMark`
 pip install -e
 ```
 
+### Upgrade to the Latest Version
+To ensure you are using the latest features and improvements, update ErrorGnoMark with:
+```bash
+pip install --upgrade ErrorGnoMark
+```
+
 
 ## Running Example Programs
 
@@ -118,7 +124,6 @@ These databases are structured to distinguish between **pulse-level** and **gate
 
 - **Pulse-Level Compilation**: Focuses on quantum optimal control, leveraging characterization data to fine-tune and enhance quantum operations.
 
---
 
 
 ## Feedback
@@ -148,5 +153,5 @@ ErrorGnoMark is licensed under the Apache License.
 
 ### Releases
 
-No releases published.
+This project follows a systematic release process to ensure users always have access to the latest stable version.
 

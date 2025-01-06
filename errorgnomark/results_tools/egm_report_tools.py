@@ -2,13 +2,16 @@
 import os  # For operating system-related functionalities
 import json  # For working with JSON data
 from datetime import datetime  # For handling date and time
+import sys
 
 # Third-party imports
 import matplotlib.pyplot as plt  # For creating visualizations
 
 # ErrorGnoMark-specific imports
-from errorgnomark.results_tools.visualization import VisualPlot  # For generating visual plots
+sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark') 
 
+# ErrorGnoMark-specific imports
+from errorgnomark.results_tools.visualization import VisualPlot  # For generating visual plots
 
 class EGMReportManager:
     """
@@ -182,6 +185,330 @@ class EGMReportManager:
         print(f"Table '{title}' saved as '{output_path}'.")
         return full_table
 
+    def _format_table(self, column_names, data):
+        """
+        Format the table data as a string.
+
+        Args:
+            column_names (list): The column headers of the table.
+            data (list): The data rows of the table.
+
+        Returns:
+            str: The formatted table as a string.
+        """
+        # Calculate column widths
+        col_widths = self._calculate_col_widths(column_names, data)
+
+        # Construct the table borders and rows
+        top_border = self._build_border('┌', '┬', '┐', col_widths)
+        header = self._build_row(column_names, col_widths)
+        separator = self._build_border('├', '┼', '┤', col_widths)
+        data_rows = ''.join(self._build_row(row, col_widths) for row in data)
+        bottom_border = self._build_border('└', '┴', '┘', col_widths)
+
+        # Combine all parts to form the full table
+        table = f"{top_border}{header}{separator}{data_rows}{bottom_border}"
+        return table
+
+
+    def draw_res_egmq1_rb(self):
+        """
+        Draws a table for the res_egmq1_rb metric.
+        """
+        metric_name = "res_egmq1_rb"
+        metric_data = self.results.get(metric_name, {})
+        if not metric_data:
+            print(f"No data found for {metric_name}.")
+            return
+
+        data = []
+        for q_idx in self.qubit_index_list:
+            error_rate = metric_data.get(f"qubit_{q_idx}", {}).get("error_rate", "N/A")
+            formatted_error_rate = f"{error_rate:.4f}" if isinstance(error_rate, float) else error_rate
+            data.append([str(q_idx), formatted_error_rate])
+
+        column_names = ["Qubit", "Error Rate"]
+        title = self.format_title(metric_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{metric_name}_{timestamp}.txt"
+
+        self._draw_table_text(title, column_names, data, output_filename)
+
+    def draw_res_egmq1_xeb(self):
+        """
+        Draws a table for the res_egmq1_xeb metric.
+        """
+        metric_name = "res_egmq1_xeb"
+        metric_data = self.results.get(metric_name, {})
+        hardware_data = metric_data.get("hardware", [])
+        if not hardware_data:
+            print(f"No hardware data found for {metric_name}.")
+            return
+
+        # Draw according to the order of qubit_index_list
+        data = []
+        for q_idx, infidelity in zip(self.qubit_index_list, hardware_data):
+            formatted_infidelity = f"{infidelity:.4f}" if isinstance(infidelity, float) else infidelity
+            data.append([str(q_idx), formatted_infidelity])
+
+        column_names = ["Qubit", "Infid XEB"]
+        title = self.format_title(metric_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{metric_name}_{timestamp}.txt"
+
+        self._draw_table_text(title, column_names, data, output_filename)
+
+    def draw_res_egmq1_csbp2x(self):
+        """
+        Draws a table for the res_egmq1_csbp2x metric.
+        """
+        metric_name = "res_egmq1_csbp2x"
+        metric_data = self.results.get(metric_name, {})
+        if not metric_data:
+            print(f"No data found for {metric_name}.")
+            return
+
+        # Extract process_infidelities, stochastic_infidelities, angle_errors
+        process_infidelities = metric_data.get("process_infidelities", [])
+        stochastic_infidelities = metric_data.get("stochastic_infidelities", [])
+        angle_errors = metric_data.get("angle_errors", [])
+
+        # Draw according to the order of qubit_index_list
+        data = []
+        for q_idx in self.qubit_index_list:
+            proc_inf = process_infidelities[q_idx] if q_idx < len(process_infidelities) else "N/A"
+            sto_inf = stochastic_infidelities[q_idx] if q_idx < len(stochastic_infidelities) else "N/A"
+            angle_err = angle_errors[q_idx] if q_idx < len(angle_errors) else "N/A"
+
+            # Format values to 4 decimal places
+            formatted_proc_inf = f"{proc_inf:.4f}" if isinstance(proc_inf, float) else proc_inf
+            formatted_sto_inf = f"{sto_inf:.4f}" if isinstance(sto_inf, float) else sto_inf
+            formatted_angle_err = f"{angle_err:.4f}" if isinstance(angle_err, float) else angle_err
+
+            data.append([str(q_idx), formatted_proc_inf, formatted_sto_inf, formatted_angle_err])
+
+        column_names = ["Qubit", "Process Infid", "Stotistic Infid", "Angle Error"]
+        title = self.format_title(metric_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{metric_name}_{timestamp}.txt"
+
+        self._draw_table_text(title, column_names, data, output_filename)
+
+    def draw_res_egmq2_rb(self):
+        """
+        Draws a table for the res_egmq2_rb metric.
+        """
+        metric_name = "res_egmq2_rb"
+        metric_data = self.results.get(metric_name, {})
+        if not metric_data:
+            print(f"No data found for {metric_name}.")
+            return
+
+        data = []
+        for pair in self.qubit_connectivity:
+            key = f"[{pair[0]}, {pair[1]}]"
+            error_rate = metric_data.get(key, {}).get("error_rate", "N/A")
+            formatted_error_rate = f"{error_rate:.4f}" if isinstance(error_rate, float) else error_rate
+            display_pair = f"({pair[0]},{pair[1]})"
+            data.append([display_pair, formatted_error_rate])
+
+        # Add average error rate
+        average_error_rate = metric_data.get("average_error_rate", "N/A")
+        formatted_average_error_rate = f"{average_error_rate:.4f}" if isinstance(average_error_rate, float) else average_error_rate
+        data.append(["Average", formatted_average_error_rate])
+
+        column_names = ["Qubits", "Error Rate"]
+        title = self.format_title(metric_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{metric_name}_{timestamp}.txt"
+
+        self._draw_table_text(title, column_names, data, output_filename)
+
+    def draw_res_egmq2_xeb(self):
+        """
+        Draws a table for the res_egmq2_xeb metric.
+        """
+        metric_name = "res_egmq2_xeb"
+        metric_data = self.results.get(metric_name, {})
+        hardware_data = metric_data.get("hardware", [])
+        if not hardware_data:
+            print(f"No hardware data found for {metric_name}.")
+            return
+
+        data = []
+        for pair, infidelity in zip(self.qubit_connectivity, hardware_data):
+            pair_str = f"({pair[0]},{pair[1]})"
+            formatted_infidelity = f"{infidelity:.4f}" if isinstance(infidelity, float) else infidelity
+            data.append([pair_str, formatted_infidelity])
+
+        column_names = ["Qubits", "Infid XEB"]
+        title = self.format_title(metric_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{metric_name}_{timestamp}.txt"
+
+        self._draw_table_text(title, column_names, data, output_filename)
+
+    def draw_res_egmq2_csb_cz(self):
+        """
+        Draws a table for the res_egmq2_csb_cz metric.
+        """
+        metric_name = "res_egmq2_csb_cz"
+        metric_data = self.results.get(metric_name, {})
+        qubit_pairs_results = metric_data.get("qubit_pairs_results", [])
+        if not qubit_pairs_results:
+            print(f"No qubit pairs results found for {metric_name}.")
+            return
+
+        data = []
+        for pair, result in zip(self.qubit_connectivity, qubit_pairs_results):
+            process_infidelity = result.get("process_infidelity", "N/A")
+            stochastic_infidelity = result.get("stochastic_infidelity", "N/A")
+            theta_error = result.get("theta_error", "N/A")
+            phi_error = result.get("phi_error", "N/A")
+
+            # Format values to 4 decimal places
+            formatted_process_infidelity = f"{process_infidelity:.4f}" if isinstance(process_infidelity, float) else process_infidelity
+            formatted_stochastic_infidelity = f"{stochastic_infidelity:.4f}" if isinstance(stochastic_infidelity, float) else stochastic_infidelity
+            formatted_theta_error = f"{theta_error:.4f}" if isinstance(theta_error, float) else theta_error
+            formatted_phi_error = f"{phi_error:.4f}" if isinstance(phi_error, float) else phi_error
+
+            # Format qubit pair as (x,y)
+            pair_str = f"({pair[0]},{pair[1]})"
+
+            data.append([pair_str, formatted_process_infidelity, formatted_stochastic_infidelity, formatted_theta_error, formatted_phi_error])
+
+        column_names = ["Qubits", "Process Infid", "CSB_S", "CSB_T", "CSB_A"]
+        title = self.format_title(metric_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{metric_name}_{timestamp}.txt"
+
+        self._draw_table_text(title, column_names, data, output_filename)
+
+    def draw_res_egmqm_ghz(self):
+        """
+        Draw a table for the metric res_egmqm_ghz.
+        """
+        metric_name = "res_egmqm_ghz"
+        metric_data = self.results.get(metric_name, {})
+        if not metric_data:
+            print(f"No data found for {metric_name}.")
+            return
+
+        fidelity_list = metric_data.get("fidelity", [])
+        if len(fidelity_list) != 6:
+            print(f"Unexpected number of fidelity entries for {metric_name}. Expected 6, got {len(fidelity_list)}.")
+            return
+
+        nqubits = [3, 4, 5, 6, 7, 8]
+        data = []
+        for nq, fid in zip(nqubits, fidelity_list):
+            formatted_fid = f"{fid:.4f}" if isinstance(fid, float) else fid
+            data.append([str(nq), formatted_fid])
+
+        column_names = ["NQUBITS", "FIDELITY_GHZ"]
+        title = self.format_title(metric_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{metric_name}_{timestamp}.txt"
+
+        self._draw_table_text(title, column_names, data, output_filename)
+
+    def draw_res_egmqm_stqv(self):
+        """
+        Build a Multi-Qubit Gates Quality - Quantum Volume table.
+        Returns the generated table string and the maximum Quantum Volume value.
+        """
+        metric_name_stqv = "res_egmqm_stqv"
+        metric_data_stqv = self.results.get(metric_name_stqv, {})
+
+        if not metric_data_stqv:
+            print(f"No data found for {metric_name_stqv}.")
+            return "N/A", None
+
+        # Dynamically extract nqubits and quantum_volume data
+        nqubits_data = []
+        qv_data = []
+
+        for key, value in metric_data_stqv.items():
+            nqubits = value.get("total_qubits")
+            qv = value.get("quantum_volume")
+
+            # Filter out entries where quantum_volume is None or 0
+            if nqubits is not None and qv is not None:
+                nqubits_data.append(nqubits)
+                qv_data.append(qv)
+
+        if not nqubits_data or not qv_data:
+            print(f"Incomplete or invalid data for {metric_name_stqv}.")
+            return "N/A", None
+
+        # Ensure data is sorted by nqubits
+        sorted_data = sorted(zip(nqubits_data, qv_data), key=lambda x: x[0])
+        nqubits_data, qv_data = zip(*sorted_data)
+
+        # Dynamically generate table content
+        max_qv = max(qv_data) if qv_data else None
+        nqubits_row = ["NQubits"] + [str(nq) for nq in nqubits_data]
+        qv_row = ["Quantum Volume"] + [str(int(qv)) for qv in qv_data]  # Ensure integers are displayed
+
+        # Calculate column widths
+        col_widths = [max(len(str(nq)), len(str(qv))) for nq, qv in zip(nqubits_row, qv_row)]
+
+        # Construct the table
+        top_border = self._build_border('┌', '┬', '┐', col_widths)
+        header_row = self._build_row(nqubits_row, col_widths)
+        separator = self._build_border('├', '┼', '┤', col_widths)
+        qv_data_row = self._build_row(qv_row, col_widths)
+        bottom_border = self._build_border('└', '┴', '┘', col_widths)
+
+        table = f"{top_border}{header_row}{separator}{qv_data_row}{bottom_border}"
+
+        return table, max_qv
+
+    def draw_res_egmqm_mrb(self):
+        """
+        Draw a table for the metric res_egmqm_mrb and return the table string.
+        """
+        metric_name = "res_egmqm_mrb"
+        metric_data = self.results.get(metric_name, {})
+        if not metric_data:
+            print(f"No data found for {metric_name}.")
+            return ""
+
+        qubit_groups = metric_data.get("qubit_groups", {})
+        if not qubit_groups:
+            print(f"No qubit groups data found for {metric_name}.")
+            return ""
+
+        # Define column names
+        column_names = ["Qubit Group", "Length 1", "Length 2", "Length 3", "Length 4", "Length 5", "Length 6"]
+
+        # Prepare data rows
+        data = []
+        for group_name, lengths in qubit_groups.items():
+            row = [group_name]
+            for i in range(1, 7):
+                length_key = f"length_{i}"
+                length_value = lengths.get(length_key, "N/A")
+                if isinstance(length_value, float):
+                    formatted_length = f"{length_value:.4f}"
+                else:
+                    formatted_length = "N/A"
+                row.append(formatted_length)
+            data.append(row)
+
+        # Format the title
+        title = self.format_title(metric_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_filename = f"{metric_name}_{timestamp}.txt"
+
+        # Draw the table and get the table string
+        table_str = self._draw_table_text(title, column_names, data, output_filename)
+
+        return table_str
+
+
+
+
     def generate_all_tables(self):
         """
         Generate all benchmarking tables.
@@ -343,3 +670,23 @@ class EGMReportManager:
         visualizer.plot_xebq2()
         plt.savefig(xebq2_path)
         plt.close()
+
+
+
+# import os
+# from errorgnomark.results_tools.egm_report_tools import EGMReportManager  # Import your EGMReportManager class
+
+# # Define the path to the JSON file
+# current_dir = os.getcwd()  # Get the current working directory
+# file_path = os.path.join(current_dir, "data_egm", "Baihua_egm_data_20250103_153026.json")  # Build the full file path
+
+# # Create an instance of EGMReportManager
+# report_manager = EGMReportManager(file_path)
+
+# # Generate the Level02 table report
+# report_manager.egm_level02_table()
+
+# # Generate the Level02 figures
+# report_manager.egm_level02_figure()
+
+# print("Reports and figures have been successfully generated!")

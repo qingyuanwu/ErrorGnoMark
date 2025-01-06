@@ -1,0 +1,26 @@
+                       Errorgnomark Report of 'QXX' Chip                        
+
+Single-Qubit Gate Quality
+
+┌─────┬──────┬───┬─────┬─────┬─────┐
+│Qubit│  RB  │XEB│CSB_P│CSB_S│CSB_A│
+├─────┼──────┼───┼─────┼─────┼─────┤
+│  0  │0.0100│N/A│ N/A │ N/A │ N/A │
+│  1  │0.0085│N/A│ N/A │ N/A │ N/A │
+│  2  │0.0015│N/A│ N/A │ N/A │ N/A │
+└─────┴──────┴───┴─────┴─────┴─────┘
+
+
+Two-Qubit Gate Quality
+
+┌──────┬───┬───┬─────┬─────┬─────┬─────┐
+│Qubits│ RB│XEB│CSB_P│CSB_S│CSB_T│CSB_A│
+├──────┼───┼───┼─────┼─────┼─────┼─────┤
+│(0,1) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+│(1,2) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+└──────┴───┴───┴─────┴─────┴─────┴─────┘
+
+
+Multi-Qubit Gates Quality - Quantum Volume
+
+N/A
