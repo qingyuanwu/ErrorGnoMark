@@ -19,7 +19,9 @@ from qiskit_aer.noise import (  # Noise modeling for simulations
 )
 from qiskit_aer.noise.errors.quantum_error import NoiseError  # For handling quantum errors
 
-
+# Add the ErrorGnoMark package to the system path
+sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')
+from errorgnomark.token_manager import get_token
 from errorgnomark.fake_data import generate_fake_data_rbq1, generate_fake_data_rbq2  # Fake data generation
 from quark import Task  # Custom task handling for ErrorGnoMark
 
@@ -29,12 +31,12 @@ warnings.filterwarnings(
     message=r'Result object contained multiple results matching name "circuit-\d+", only first match will be returned.'
 )
 
+import random
 
 def build_custom_noise_model():
     """
-    Constructs a custom noise model including amplitude damping and phase damping errors.
-    This noise model is adjusted to achieve ~10e-3 error for 1-qubit gates and ~10e-2 error for 2-qubit gates.
-    The noise model is now applied to arbitrary qubit indices in any quantum circuit.
+    Constructs a simplified custom noise model including depolarizing, amplitude damping, and phase damping errors
+    applied to all single-qubit gates.
     """
     noise_model = NoiseModel()
     
@@ -42,108 +44,68 @@ def build_custom_noise_model():
     p_amp_1q = 0.1   # Amplitude damping probability for 1-qubit gates
     p_phase_1q = 0.005  # Phase damping probability for 1-qubit gates
     p_identity_1q = 1.0 - p_amp_1q - p_phase_1q  # No-error probability for 1-qubit gates
-    
-    p_amp_2q = 0.1    # Amplitude damping probability for 2-qubit gates
-    p_phase_2q = 0.001  # Phase damping probability for 2-qubit gates
-    p_identity_2q = 1.0 - p_amp_2q - p_phase_2q  # No-error probability for 2-qubit gates
+    p_depol_1q = 0.01  # Depolarizing error probability for 1-qubit gates
 
     # Validate probabilities
-    if p_identity_1q < 0 or p_identity_2q < 0:
-        raise ValueError("The sum of p_amp and p_phase should be <= 1 for both 1-qubit and 2-qubit gates.")
+    if p_identity_1q < 0:
+        raise ValueError("The sum of p_amp and p_phase should be <= 1 for 1-qubit gates.")
     
     # Define single-qubit gates
     single_qubit_gates = ["h", "x", "y", "z", "rx", "ry", "rz"]
-    
+
+    # List of possible errors to apply
+    error_types = [
+        lambda: amplitude_damping_error(p_amp_1q),  # Amplitude damping
+        lambda: phase_damping_error(p_phase_1q),    # Phase damping
+        lambda: depolarizing_error(p_depol_1q, 1)    # Depolarizing error
+    ]
+
     # Apply noise to 1-qubit gates (for arbitrary qubit indices)
     for gate in single_qubit_gates:
-        identity = QuantumCircuit(1)
-        identity.id(0)
+        # Randomly choose the error type
+        error_type = random.choice(error_types)()  # Choose and call the error type
         
-        # Amplitude damping error circuits and probabilities
-        amp_error = amplitude_damping_error(p_amp_1q)
-        amp_circs = amp_error.circuits
-        amp_probs = amp_error.probabilities
-        
-        # Phase damping error circuits and probabilities
-        phase_error = phase_damping_error(p_phase_1q)
-        phase_circs = phase_error.circuits
-        phase_probs = phase_error.probabilities
-        
-        # Build the list of noise operations for QuantumError
-        noise_ops = []
-        noise_ops.append((identity, p_identity_1q))
-        
-        # Add amplitude damping error circuits
-        for circ, prob in zip(amp_circs, amp_probs):
-            noise_ops.append((circ, p_amp_1q * prob))
-        
-        # Add phase damping error circuits
-        for circ, prob in zip(phase_circs, phase_probs):
-            noise_ops.append((circ, p_phase_1q * prob))
-        
-        # Ensure the total probability sums to 1
-        total_prob = sum(prob for _, prob in noise_ops)
-        if not np.isclose(total_prob, 1.0, atol=1e-6):
-            raise ValueError(f"The total noise probability for gate '{gate}' is {total_prob}, which does not equal 1.")
-        
-        # Create QuantumError object
-        error = QuantumError(noise_ops)
-        
-        # Add QuantumError to the noise model for each qubit
-        # Add the error to all qubits dynamically (not just qubit 0)
-        noise_model.add_all_qubit_quantum_error(error, gate)
-    
-    # Define two-qubit gates
-    two_qubit_gates = ["cz"]
-    
-    # Apply noise to 2-qubit gates (for arbitrary qubit indices)
-    for gate in two_qubit_gates:
-        identity = QuantumCircuit(2)
-        identity.id(0)
-        identity.id(1)
-        
-        # Amplitude damping errors on both qubits
-        amp_error = amplitude_damping_error(p_amp_2q).tensor(amplitude_damping_error(p_amp_2q))
-        amp_circs = amp_error.circuits
-        amp_probs = amp_error.probabilities
-        
-        # Phase damping errors on both qubits
-        phase_error = phase_damping_error(p_phase_2q).tensor(phase_damping_error(p_phase_2q))
-        phase_circs = phase_error.circuits
-        phase_probs = phase_error.probabilities
-        
-        # Build the list of noise operations for QuantumError
-        noise_ops = []
-        noise_ops.append((identity, p_identity_2q))
-        
-        # Add amplitude damping error circuits
-        for circ, prob in zip(amp_circs, amp_probs):
-            noise_ops.append((circ, p_amp_2q * prob))
-        
-        # Add phase damping error circuits
-        for circ, prob in zip(phase_circs, phase_probs):
-            noise_ops.append((circ, p_phase_2q * prob))
-        
-        # Ensure the total probability sums to 1
-        total_prob = sum(prob for _, prob in noise_ops)
-        if not np.isclose(total_prob, 1.0, atol=1e-6):
-            raise ValueError(f"The total noise probability for gate '{gate}' is {total_prob}, which does not equal 1.")
-        
-        # Create QuantumError object
-        error = QuantumError(noise_ops)
-        
-        # Add QuantumError to the noise model for the two-qubit gate
-        # Add the error to all qubits dynamically (not just qubits 0,1)
-        noise_model.add_all_qubit_quantum_error(error, gate)
-    
-    # Add depolarizing noise to other two-qubit gates (such as "cx" and "swap")
-    additional_two_qubit_gates = ["cx", "swap"]
-    for gate in additional_two_qubit_gates:
-        depol_2q = depolarizing_error(0.005, 2)  # Small depolarizing error
-        # Add the depolarizing error to all qubits dynamically
-        noise_model.add_all_qubit_quantum_error(depol_2q, gate)
+        # Add the selected error to the noise model for all qubits for the current gate
+        noise_model.add_all_qubit_quantum_error(error_type, gate)
     
     return noise_model
+
+def map_circuit(circuit, active_qubits, active_cbits):
+    """
+    Map qubits and classical bits to qubit 0 (and cbit 0) except for two-qubit gates, 
+    which will map qubit indices [0, 1] for two-qubit gates and one qubit for others.
+    """
+    # Create a new circuit with the appropriate number of qubits and classical bits
+    new_nqubits = 2 if len(active_qubits) > 1 else 1  # For two-qubit operations, keep two qubits
+    new_ncbits = 1  # Only one classical bit for the measurement result
+    new_circuit = QuantumCircuit(new_nqubits, new_ncbits)
+
+    # Map active qubits: if there are two qubits, map them to 0 and 1, else map to 0
+    qubit_mapping = {}
+    if len(active_qubits) == 2:
+        qubit_mapping = {active_qubits[0]: 0, active_qubits[1]: 1}
+    else:
+        qubit_mapping = {active_qubits[0]: 0}  # Map all to qubit 0 if there's only 1 qubit
+
+    # Map classical bits: map all classical bits to cbit 0
+    cbit_mapping = {old: 0 for old in active_cbits}
+
+    # Loop through instructions and map the qubits for each operation
+    for instruction, qargs, cargs in circuit.data:
+        new_qargs = []
+        for qbit in qargs:
+            new_qargs.append(new_circuit.qubits[qubit_mapping[circuit.qubits.index(qbit)]])
+
+        # Classical bits mapping
+        new_cargs = [new_circuit.clbits[cbit_mapping[circuit.clbits.index(cbit)]] for cbit in cargs] if cargs else []
+        
+        # Add the instruction to the new circuit
+        new_circuit.append(instruction, new_qargs, new_cargs)
+
+    # # Debugging: Check the new circuit structure
+    # print(f"New circuit created: {new_circuit}")
+
+    return new_circuit, qubit_mapping, cbit_mapping
 
 
 
@@ -207,8 +169,8 @@ class QuantumJobRunner:
             shots=1,
             print_progress=True,
             use_fake_data=None,
-            delay_between_tasks=2,
-            max_retries=3,
+            delay_between_tasks=5,
+            max_retries=5,
             elapsed_time=False
         ):
             """
@@ -241,7 +203,8 @@ class QuantumJobRunner:
                 elif use_fake_data == 'fake_dataq2':
                     return generate_fake_data_rbq2()
             
-            # token = "5vtENo5IEGViJNv:nmgYuZ:ehMobWzUd6qcu7pMeSZW/Rg{dUPyBkO{5DO{BEP4VkO{dUN7JDd5WnJtJDOyp{O1pEOyBjNy1jNy1DOzBkNjpkJ1GXbjxjJvOnMkGnM{mXdiKHRliYbii3ZjpkJzW3d2Kzf"
+            # Retrieve the token
+            token = get_token()
             tmgr = Task(token)
             # backend = self.select_best_chip(tmgr)
             backend = 'Baihua'
@@ -284,7 +247,7 @@ class QuantumJobRunner:
 
                 while True:
                     try:
-                        time.sleep(10)
+                        time.sleep(5)
                         res = tmgr.result(tid)
 
                         if res and 'status' in res:
@@ -308,35 +271,12 @@ class QuantumJobRunner:
             if elapsed_time:
                 return task_results, np.mean(elapsed_times)
             else:
+
                 return task_results
 
 
-    def simulation_ideal_qiskit(
-        self,
-        compile=True,
-        shots=4096,
-        print_progress=False,
-        noise_model=None,
-        elapsed_time=False
-    ):
-        """
-        Runs quantum circuits using Qiskit's Aer simulator and returns measurement results mapped to the original qubits.
-
-        Parameters:
-            compile (bool): Whether to transpile circuits to the local gate set. Default is True.
-            shots (int): Number of measurement shots per circuit. Default is 1024.
-            print_progress (bool): Whether to print progress updates. Default is False.
-            noise_model (None or bool): If None, runs ideal simulation. If True, uses a custom noise model with amplitude and phase damping errors.
-            elapsed_time (bool): Whether to record the execution time for each circuit.
-
-        Returns:
-            If elapsed_time=False:
-                list: A list of dictionaries containing measurement results for each circuit, with bitstrings corresponding only to the active qubits.
-            If elapsed_time=True:
-                tuple: (results, times)
-                    - results: A list of dictionaries containing measurement results for each circuit.
-                    - times: A list of execution times for each circuit.
-        """
+    def simulation_ideal_qiskit(self, compile=True, shots=4096, print_progress=False, noise_model=True, elapsed_time=False):
+        # Function to get active qubits and classical bits
         def get_active_qubits_and_cbits(circuit):
             active_qubits, active_cbits = set(), set()
             for instruction, qargs, cargs in circuit.data:
@@ -347,102 +287,76 @@ class QuantumJobRunner:
             total_cbits = len(circuit.clbits)
             return sorted(active_qubits), sorted(active_cbits), total_cbits
 
-        def map_circuit(circuit, active_qubits, active_cbits):
-            new_nqubits = len(active_qubits)
-            new_ncbits = len(active_cbits)
-            new_circuit = QuantumCircuit(new_nqubits, new_ncbits)
-
-            qubit_mapping = {old: new for new, old in enumerate(active_qubits)}
-            cbit_mapping = {old: new for new, old in enumerate(active_cbits)}
-
-            for instruction, qargs, cargs in circuit.data:
-                if instruction.name == 'measure':
-                    new_qargs = [
-                        new_circuit.qubits[qubit_mapping[circuit.qubits.index(qbit)]]
-                        for qbit in qargs
-                    ]
-                    new_cargs = [
-                        new_circuit.clbits[cbit_mapping[circuit.clbits.index(cbit)]]
-                        for cbit in cargs
-                    ]
-                    new_circuit.append(instruction, new_qargs, new_cargs)
-                else:
-                    new_qargs = [
-                        new_circuit.qubits[qubit_mapping[circuit.qubits.index(qbit)]]
-                        for qbit in qargs
-                    ]
-                    new_circuit.append(instruction, new_qargs, [])
-            return new_circuit, qubit_mapping, cbit_mapping
-
+        # Function to remap counts
         def remap_counts(remapped_counts, qubit_mapping, cbit_mapping, total_cbits):
             sorted_original_cbits = sorted(cbit_mapping.keys())
             final_counts = {}
             for bitstring, count in remapped_counts.items():
-                bitstring = bitstring[::-1]
+                bitstring = bitstring[::-1]  # Reverse the bitstring
                 extracted_bits = ''.join([
-                    bitstring[cbit_mapping[cbit]]
-                    for cbit in sorted_original_cbits
+                    bitstring[cbit_mapping[cbit]] for cbit in sorted_original_cbits
                 ])
                 final_counts[extracted_bits] = final_counts.get(extracted_bits, 0) + count
             return final_counts
-
-        if not self.circuits:
-            raise ValueError("No circuits to run.")
 
         # Build noise model
         if noise_model is True:
             noise_model = build_custom_noise_model()
         elif noise_model is False or noise_model is None:
             noise_model = None
-        else:
-            raise ValueError("Unsupported noise model type.")
 
         # Initialize simulator
         simulator = AerSimulator(noise_model=noise_model)
-
         counts, execution_times = [], []
         total_circuits = len(self.circuits)
 
         for idx, circuit in enumerate(self.circuits):
-            # if print_progress:
-            #     print(f"Running circuit {idx+1}/{total_circuits}")
-
             active_qubits, active_cbits, total_cbits = get_active_qubits_and_cbits(circuit)
             if not active_qubits:
+                print(f"Warning: No active qubits in circuit {idx + 1}")
                 counts.append({})
                 execution_times.append(0.0)
                 continue
 
-            mapped_circuit, qubit_mapping, cbit_mapping = map_circuit(
-                circuit, active_qubits, active_cbits
-            )
-            if compile:
-                # Set optimization level to 0 and specify basis gates to prevent gate decomposition
-                transpiled_circuit = transpile(
-                    mapped_circuit,
-                    simulator,
-                    optimization_level=0,
-                    basis_gates=["h", "x", "y", "z", "rx", "ry", "rz", "cz", "cx", "swap"]
-                )
+            # If there is 1 or 2 qubits, we map the circuit
+            if len(active_qubits) <= 2:
+                # Prepare the circuit and map qubits and classical bits
+                mapped_circuit, qubit_mapping, cbit_mapping = map_circuit(circuit, active_qubits, active_cbits)
+                if compile:
+                    transpiled_circuit = transpile(mapped_circuit, simulator, optimization_level=0)
+                else:
+                    transpiled_circuit = mapped_circuit
             else:
-                transpiled_circuit = mapped_circuit
+                # For more than 2 qubits, directly execute the circuit without mapping
+                transpiled_circuit = circuit
 
             try:
                 start_time = time.time()
                 job = simulator.run(transpiled_circuit, shots=shots)
                 result = job.result()
+
+                if result is None:
+                    print(f"Error: No result for circuit {idx + 1}")
+                    counts.append({})
+                    execution_times.append(0.0)
+                    continue
+
                 elapsed = time.time() - start_time
                 counts_mapped = result.get_counts(transpiled_circuit)
+
+                if counts_mapped is None or len(counts_mapped) == 0:
+                    print(f"Warning: No counts returned for circuit {idx + 1}")
+                    counts.append({})
+                else:
+                    remapped_counts = remap_counts(counts_mapped, qubit_mapping, cbit_mapping, total_cbits) if len(active_qubits) <= 2 else counts_mapped
+                    counts.append(remapped_counts)
+
                 execution_times.append(elapsed)
+
             except Exception as e:
-                print(f"Error running circuit {idx}: {e}")
+                print(f"Error running circuit {idx + 1}: {e}")
                 counts.append({})
                 execution_times.append(0.0)
-                continue
-
-            remapped_counts = remap_counts(
-                counts_mapped, qubit_mapping, cbit_mapping, total_cbits
-            )
-            counts.append(remapped_counts)
 
         return (counts, np.mean(execution_times)) if elapsed_time else counts
+

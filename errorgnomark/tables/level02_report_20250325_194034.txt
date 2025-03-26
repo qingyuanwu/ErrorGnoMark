@@ -1,0 +1,186 @@
+                       Errorgnomark Report of 'QXX' Chip                        
+================================================================================
+
+Chip Structure: 12 rows x 13 columns
+--------------------------------------------------
+Selected Qubit Indices: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+Qubit Connectivity: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8]]
+================================================================================
+
+Chip Structure Layout:
+Q Q Q Q Q Q Q Q Q . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+
+## Section 1: Single-Qubit Gate Quality - RB
+--------------------------------------------------
+**Randomized Benchmarking (RB)**: Measures gate error rates.
+**Cross-Entropy Benchmarking (XEB)**: Evaluates gate fidelity.
+
+┌─────┬───────┬───┐
+│Qubit│   RB  │XEB│
+├─────┼───────┼───┤
+│  0  │ 0.0378│N/A│
+│  1  │ 0.0338│N/A│
+│  2  │ 0.0064│N/A│
+│  3  │-0.0129│N/A│
+│  4  │ 0.0141│N/A│
+│  5  │ 0.0337│N/A│
+│  6  │-0.0049│N/A│
+│  7  │ 0.0392│N/A│
+│  8  │ 0.0185│N/A│
+└─────┴───────┴───┘
+
+
+## Section 2: Single-Qubit Gate Quality - XEB
+--------------------------------------------------
+**Cross-Entropy Benchmarking (XEB)**: Evaluates gate fidelity.
+
+┌─────┬───┬──────┐
+│Qubit│ RB│ XEB  │
+├─────┼───┼──────┤
+│  0  │N/A│0.1150│
+│  1  │N/A│0.0127│
+│  2  │N/A│0.1059│
+│  3  │N/A│0.0000│
+│  4  │N/A│0.0000│
+│  5  │N/A│0.0326│
+│  6  │N/A│0.0914│
+│  7  │N/A│0.0874│
+│  8  │N/A│0.0305│
+└─────┴───┴──────┘
+
+
+## Section 3: Single-Qubit Gate Quality - CSB (pi/2 - X)
+--------------------------------------------------
+**Channel Spectrum Benchmarking (CSB)**: Measures process, stochastic, and angle error rates for qubit operations.
+**CSB_P**: Process Infidelity
+**CSB_S**: Stochastic Infidelity
+**CSB_A**: Angle Error
+
+┌─────┬──────┬──────┬──────┐
+│Qubit│CSB_P │CSB_S │CSB_A │
+├─────┼──────┼──────┼──────┤
+│  0  │0.0055│0.0055│0.0017│
+│  1  │0.0423│0.0417│0.0003│
+│  2  │0.0001│0.0001│0.0022│
+│  3  │0.0010│0.0010│0.0004│
+│  4  │0.0055│0.0055│ N/A  │
+│  5  │0.0009│0.0009│ N/A  │
+│  6  │0.0396│0.0390│0.0018│
+│  7  │0.0050│0.0050│ N/A  │
+│  8  │0.0444│0.0437│0.0017│
+└─────┴──────┴──────┴──────┘
+
+
+## Section 4: Two-Qubit Gate Quality - RB
+--------------------------------------------------
+**Randomized Benchmarking (RB)**: Measures gate error rates for two qubits.
+
+┌──────┬───────┬───┐
+│Qubits│   RB  │XEB│
+├──────┼───────┼───┤
+│(0,1) │ 0.0158│N/A│
+│(1,2) │ 0.0830│N/A│
+│(2,3) │ 0.0623│N/A│
+│(3,4) │ 0.0620│N/A│
+│(4,5) │-0.0141│N/A│
+│(5,6) │-0.0473│N/A│
+│(6,7) │-0.0184│N/A│
+│(7,8) │ 0.0527│N/A│
+└──────┴───────┴───┘
+
+
+## Section 5: Two-Qubit Gate Quality - XEB
+--------------------------------------------------
+**Cross-Entropy Benchmarking (XEB)**: Evaluates two-qubit gate fidelity.
+
+┌──────┬───┬──────┐
+│Qubits│ RB│ XEB  │
+├──────┼───┼──────┤
+│(0,1) │N/A│0.3429│
+│(1,2) │N/A│0.4103│
+│(2,3) │N/A│0.7453│
+│(3,4) │N/A│0.0000│
+│(4,5) │N/A│0.1853│
+│(5,6) │N/A│0.2348│
+│(6,7) │N/A│0.4943│
+│(7,8) │N/A│0.0000│
+└──────┴───┴──────┘
+
+
+## Section 6: Two-Qubit Gate Quality - CSB
+--------------------------------------------------
+**Channel Spectrum Benchmarking (CSB)**: Evaluates process, stochastic, and angle errors for qubit pairs.
+
+┌──────┬─────┬─────┬─────┬─────┐
+│Qubits│CSB_P│CSB_S│CSB_T│CSB_A│
+├──────┼─────┼─────┼─────┼─────┤
+│(0,1) │ N/A │ N/A │ N/A │ N/A │
+│(1,2) │ N/A │ N/A │ N/A │ N/A │
+│(2,3) │ N/A │ N/A │ N/A │ N/A │
+│(3,4) │ N/A │ N/A │ N/A │ N/A │
+│(4,5) │ N/A │ N/A │ N/A │ N/A │
+│(5,6) │ N/A │ N/A │ N/A │ N/A │
+│(6,7) │ N/A │ N/A │ N/A │ N/A │
+│(7,8) │ N/A │ N/A │ N/A │ N/A │
+└──────┴─────┴─────┴─────┴─────┘
+
+
+## Section 7: Multi-Qubit Gates Quality - Fidelity GHZ
+--------------------------------------------------
+**N-Qubit GHZ state fidelity**: Measures the fidelity of GHZ states on multiple qubits.
+
+┌───────┬────────────┐
+│NQUBITS│FIDELITY_GHZ│
+├───────┼────────────┤
+│   3   │   0.9985   │
+│   4   │   1.0000   │
+│   5   │   1.0000   │
+│   6   │   0.9987   │
+│   7   │   1.0000   │
+│   8   │   1.0000   │
+└───────┴────────────┘
+
+
+## Section 8: Multi-Qubit Gates Quality - Quantum Volume
+--------------------------------------------------
+**Quantum Volume**: Measures the complexity of quantum circuits that a quantum computer can process.
+
+┌──────────────┬─┬─┐
+│   NQubits    │2│3│
+├──────────────┼─┼─┤
+│Quantum Volume│4│8│
+└──────────────┴─┴─┘
+
+Maximum Quantum Volume: 8
+
+## Section 9: Multi-Qubit Gates Quality - MRB
+--------------------------------------------------
+**Multi-Qubit Randomized Benchmarking (MRB)**: Measures multi-qubit gate error rates for different qubit lengths.
+
+┌───────────┬──────────────────────┬────────┬────────┬─────────┬─────────┬─────────┐
+│Qubit Count│        Qubits        │Length 4│Length 8│Length 12│Length 16│Length 20│
+├───────────┼──────────────────────┼────────┼────────┼─────────┼─────────┼─────────┤
+│     2     │         0, 1         │ 0.8025 │ 0.5602 │   N/A   │   N/A   │   N/A   │
+│     4     │      0, 1, 2, 3      │ 0.8025 │ 0.5602 │   N/A   │   N/A   │   N/A   │
+│     6     │   0, 1, 2, 3, 4, 5   │ 0.8025 │ 0.5602 │   N/A   │   N/A   │   N/A   │
+│     8     │0, 1, 2, 3, 4, 5, 6, 7│ 0.8025 │ 0.5602 │   N/A   │   N/A   │   N/A   │
+└───────────┴──────────────────────┴────────┴────────┴─────────┴─────────┴─────────┘
+
+
+CLOPS: 1.0024e+03
+
+## Section 12: Multi-Qubit Gates Application
+--------------------------------------------------
+VQE Problem: Hamiltonian with 4 terms on 2 qubits using EfficientSU2 ansatz.
+Final Energy: -0.7029303818626441

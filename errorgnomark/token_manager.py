@@ -1,3 +1,5 @@
+# token_manager.py
+
 # Global variable to store the user's token
 TOKEN = None
 
@@ -22,6 +24,7 @@ def get_token():
     if TOKEN is None:
         raise ValueError("Token is not defined. Use `define_token` to set it.")
     return TOKEN
+
 
 # Token explanation
 """

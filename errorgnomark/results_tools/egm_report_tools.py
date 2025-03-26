@@ -3,11 +3,13 @@ import os  # For operating system-related functionalities
 import json  # For working with JSON data
 from datetime import datetime  # For handling date and time
 import sys
+import numpy as np
 
 # Third-party imports
 import matplotlib.pyplot as plt  # For creating visualizations
 
-
+# Add the ErrorGnoMark package to the system path
+sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')
 # ErrorGnoMark-specific imports
 from errorgnomark.results_tools.visualization import VisualPlot  # For generating visual plots
 
@@ -34,6 +36,9 @@ class EGMReportManager:
         self.figures_dir = "figures"  # Directory for saving figures
         self._create_output_dir()
         self._create_figures_dir()
+
+
+
 
     def _read_json(self):
         """
@@ -92,20 +97,29 @@ class EGMReportManager:
     def _calculate_col_widths(self, column_names, data):
         """
         Calculate column widths based on column names and data content.
-
+        
         Args:
             column_names (list): List of column names.
             data (list of lists): Table data.
-
+        
         Returns:
             list: List of column widths.
         """
+        # Ensure data rows have the same number of columns as column names
+        for row in data:
+            if len(row) != len(column_names):
+                print(f"Warning: Row {row} has a different number of columns than the header.")
+                row = row[:len(column_names)]  # Trim any extra columns
+                row.extend([""] * (len(column_names) - len(row)))  # Pad with empty strings if necessary
+        
+        # Now calculate the column widths
         col_widths = []
         for i, col in enumerate(column_names):
             max_content_width = max(len(str(row[i])) for row in data) if data else 0
             col_width = max(len(col), max_content_width)
             col_widths.append(col_width)
         return col_widths
+
 
     def _build_border(self, left, middle, right, col_widths):
         """
@@ -194,6 +208,15 @@ class EGMReportManager:
         Returns:
             str: The formatted table as a string.
         """
+        # Ensure padding for rows with missing data or trimming extra data
+        for row in data:
+            if len(row) < len(column_names):
+                print(f"Warning: Row {row} has a different number of columns than the header.")
+                row.extend([""] * (len(column_names) - len(row)))  # Pad missing columns
+            elif len(row) > len(column_names):
+                print(f"Warning: Row {row} has more columns than the header.")
+                row = row[:len(column_names)]  # Trim extra columns
+
         # Calculate column widths
         col_widths = self._calculate_col_widths(column_names, data)
 
@@ -207,6 +230,8 @@ class EGMReportManager:
         # Combine all parts to form the full table
         table = f"{top_border}{header}{separator}{data_rows}{bottom_border}"
         return table
+
+
 
 
     def draw_res_egmq1_rb(self):
@@ -467,44 +492,73 @@ class EGMReportManager:
         Draw a table for the metric res_egmqm_mrb and return the table string.
         """
         metric_name = "res_egmqm_mrb"
-        metric_data = self.results.get(metric_name, {})
+        
+        # Access the data for the specific metric
+        metric_data = self.results.get(metric_name, None)
+
         if not metric_data:
             print(f"No data found for {metric_name}.")
             return ""
 
-        qubit_groups = metric_data.get("qubit_groups", {})
-        if not qubit_groups:
-            print(f"No qubit groups data found for {metric_name}.")
+        polarizations = metric_data.get('polarizations', [])
+        qubits_for_length = metric_data.get('qubits_for_length', {})
+
+        if not polarizations or not qubits_for_length:
+            print(f"Missing data for {metric_name}: 'polarizations' or 'qubits_for_length'.")
             return ""
 
-        # Define column names
-        column_names = ["Qubit Group", "Length 1", "Length 2", "Length 3", "Length 4", "Length 5", "Length 6"]
+        # Get the unique lengths across all qubit groups
+        unique_lengths = sorted(set(length for qubit_group in qubits_for_length.values()
+                                    for length in qubit_group.keys()))
 
-        # Prepare data rows
+        column_names = ["Qubit Count", "Qubits"] + [f"Length {length}" for length in unique_lengths]
+
         data = []
-        for group_name, lengths in qubit_groups.items():
-            row = [group_name]
-            for i in range(1, 7):
-                length_key = f"length_{i}"
-                length_value = lengths.get(length_key, "N/A")
-                if isinstance(length_value, float):
-                    formatted_length = f"{length_value:.4f}"
-                else:
-                    formatted_length = "N/A"
-                row.append(formatted_length)
+        
+        # Iterate over each qubit group in qubits_for_length
+        for qubit_count, lengths in sorted(qubits_for_length.items()):
+            qubits = lengths.get(unique_lengths[0], [])
+            row = [str(qubit_count), ', '.join(map(str, qubits))]
+
+            for length in unique_lengths:
+                length_index = unique_lengths.index(length)
+                polarization_value = polarizations[int(qubit_count) // 2 - 1][length_index]  # Fetch the correct polarization
+                row.append(f"{polarization_value:.4f}")
+
             data.append(row)
 
-        # Format the title
-        title = self.format_title(metric_name)
+        title = self.format_title("res_egmqm_mrb")
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_filename = f"{metric_name}_{timestamp}.txt"
+        output_filename = f"res_egmqm_mrb_{timestamp}.txt"
 
-        # Draw the table and get the table string
         table_str = self._draw_table_text(title, column_names, data, output_filename)
 
         return table_str
 
-
+    def generate_chip_layout(self):
+        """
+        Generate a textual layout of the chip, where qubit positions are represented by dots
+        and selected qubits are connected by short lines.
+        
+        Returns:
+            str: A textual representation of the chip layout.
+        """
+        # Initialize an empty 2D grid representing the chip
+        rows = self.data["chip_info"]["rows"]
+        columns = self.data["chip_info"]["columns"]
+        chip_grid = [["." for _ in range(columns)] for _ in range(rows)]
+        
+        # Mark the selected qubits with short lines
+        for idx in self.qubit_index_list:
+            row, col = idx // columns, idx % columns
+            chip_grid[row][col] = "Q"  # Mark selected qubits with "Q"
+        
+        # Create the layout as a string
+        chip_layout = ""
+        for row in chip_grid:
+            chip_layout += " ".join(row) + "\n"
+        
+        return chip_layout
 
 
     def generate_all_tables(self):
@@ -522,12 +576,28 @@ class EGMReportManager:
         self.draw_res_egmqm_mrb()
 
 
-    def egm_level02_table(self):
+
+    def egm_level02_table(self,        
+        rbq1_selected = True,
+        xebq1_selected = True,
+        csbq1_selected = True,
+        rbq2_selected = True,
+        xebq2_selected = True,
+        csbq2_selected = True,
+        ghzqm_selected = True,
+        qvqm_selected = True,
+        mrbqm_selected = True,
+        clopsqm_selected = True,
+        vqeqm_selected = True):
         """
         Generates a comprehensive Level02 report that includes information on 
-        Single-Qubit Gate Quality, Two-Qubit Gate Quality, and Multi-Qubit Gates Quality.
-        The report title is based on the JSON data file name.
+        Single-Qubit Gate Quality, Two-Qubit Gate Quality, Multi-Qubit Gates Quality,
+        CLOPS, and VQE results. The report title is based on the JSON data file name.
         """
+
+        # selecteds for each specific section (set to True by default, you can set them to False to skip sections)
+
+
         # Get the JSON file name
         file_name = os.path.basename(self.json_file_path)
 
@@ -536,96 +606,262 @@ class EGMReportManager:
 
         # Main title for the report
         main_title = "Errorgnomark Report of 'QXX' Chip"
+        report += f"{main_title.center(80)}\n"
+        report += "=" * 80 + "\n\n"
+        
+        # Chip Structure and Selected Qubit Indices
+        chip_info = self.data.get("chip_info", {})
+        if not chip_info:
+            print("Chip information is missing from the JSON data.")
+            return
+        report += f"Chip Structure: {chip_info.get('rows', 'N/A')} rows x {chip_info.get('columns', 'N/A')} columns\n"
+        report += "-" * 50 + "\n"
+        report += f"Selected Qubit Indices: {str(self.qubit_index_list)}\n"
+        report += f"Qubit Connectivity: {str(self.qubit_connectivity)}\n"
+        report += "=" * 80 + "\n\n"
+
+        # Generate and display the chip layout with selected qubits
+        chip_layout = self.generate_chip_layout()
+        report += "Chip Structure Layout:\n"
+        report += chip_layout + "\n"
 
         # Define column names for different categories
-        single_q_columns = ["Qubit", "RB", "XEB", "CSB_P", "CSB_S", "CSB_A"]
-        two_q_columns = ["Qubits", "RB", "XEB", "CSB_P", "CSB_S", "CSB_T", "CSB_A"]
+        single_q_columns = ["Qubit", "RB", "XEB"]
+        csb_single_q_columns = ["Qubit", "CSB_P", "CSB_S", "CSB_A"]
+        two_q_columns = ["Qubits", "RB", "XEB"]
+        csb_two_q_columns = ["Qubits", "CSB_P", "CSB_S", "CSB_T", "CSB_A"]
         multi_q_columns_ghz = ["NQUBITS", "FIDELITY_GHZ"]
 
-        # Build Single-Qubit Gate Quality data
-        single_q_data = []
-        for q_idx in self.qubit_index_list:
-            rb = self.results.get("res_egmq1_rb", {}).get(f"qubit_{q_idx}", {}).get("error_rate", "N/A")
-            rb = f"{rb:.4f}" if isinstance(rb, float) else rb
+        # Section 1: Single-Qubit Gate Quality - RB
+        if rbq1_selected:
+            report += "## Section 1: Single-Qubit Gate Quality - RB\n"
+            report += "-" * 50 + "\n"
+            report += "**Randomized Benchmarking (RB)**: Measures gate error rates.\n"
+            report += "**Cross-Entropy Benchmarking (XEB)**: Evaluates gate fidelity.\n\n"
+            
+            # Build Single-Qubit Gate Quality data (RB)
+            single_q_data = []
+            for q_idx in self.qubit_index_list:
+                rb = self.results.get("res_egmq1_rb", {}).get(f"qubit_{q_idx}", {}).get("error_rate", "N/A")
+                rb = f"{rb:.4f}" if isinstance(rb, float) else rb
+                single_q_data.append([str(q_idx), rb, "N/A"])  # XEB column as "N/A" temporarily for this section
 
-            xeb = self.results.get("res_egmq1_xeb", {}).get("hardware", [])
-            xeb = f"{xeb[q_idx]:.4f}" if isinstance(xeb, list) and q_idx < len(xeb) and isinstance(xeb[q_idx], float) else "N/A"
+            report += self._format_table(single_q_columns, single_q_data) + "\n\n"
 
-            csb_p = self.results.get("res_egmq1_csbp2x", {}).get("process_infidelities", [])
-            csb_p = f"{csb_p[q_idx]:.4f}" if isinstance(csb_p, list) and q_idx < len(csb_p) and isinstance(csb_p[q_idx], float) else "N/A"
+        # Section 2: Single-Qubit Gate Quality - XEB
+        if xebq1_selected:
+            report += "## Section 2: Single-Qubit Gate Quality - XEB\n"
+            report += "-" * 50 + "\n"
+            report += "**Cross-Entropy Benchmarking (XEB)**: Evaluates gate fidelity.\n\n"
 
-            csb_s = self.results.get("res_egmq1_csbp2x", {}).get("stochastic_infidelities", [])
-            csb_s = f"{csb_s[q_idx]:.4f}" if isinstance(csb_s, list) and q_idx < len(csb_s) and isinstance(csb_s[q_idx], float) else "N/A"
+            # Build Single-Qubit Gate Quality data (XEB)
+            single_q_data = []
+            for q_idx in self.qubit_index_list:
+                xeb = self.results.get("res_egmq1_xeb", {}).get("hardware", [])
+                xeb = f"{xeb[q_idx]:.4f}" if isinstance(xeb, list) and q_idx < len(xeb) and isinstance(xeb[q_idx], float) else "N/A"
+                single_q_data.append([str(q_idx), "N/A", xeb])  # RB column as "N/A" temporarily for this section
 
-            csb_a = self.results.get("res_egmq1_csbp2x", {}).get("angle_errors", [])
-            csb_a = f"{csb_a[q_idx]:.4f}" if isinstance(csb_a, list) and q_idx < len(csb_a) and isinstance(csb_a[q_idx], float) else "N/A"
+            report += self._format_table(single_q_columns, single_q_data) + "\n\n"
 
-            single_q_data.append([str(q_idx), rb, xeb, csb_p, csb_s, csb_a])
+        # Section 3: Single-Qubit Gate Quality - CSB
+        if csbq1_selected:
+            report += "## Section 3: Single-Qubit Gate Quality - CSB (pi/2 - X)\n"
+            report += "-" * 50 + "\n"
+            report += "**Channel Spectrum Benchmarking (CSB)**: Measures process, stochastic, and angle error rates for qubit operations.\n"
+            report += "**CSB_P**: Process Infidelity\n"
+            report += "**CSB_S**: Stochastic Infidelity\n"
+            report += "**CSB_A**: Angle Error\n\n"
 
-        # Build Two-Qubit Gate Quality data
-        two_q_data = []
-        for pair in self.qubit_connectivity:
-            x, y = pair
-            qubits = f"({x},{y})"
+            # Build CSB (pi/2 - X) results for Single-Qubits (CSB_P, CSB_S, CSB_A)
+            csb_single_q_data = []
+            for q_idx in self.qubit_index_list:
+                csb_p = self.results.get("res_egmq1_csbp2x", {}).get("process_infidelities", [])
+                csb_s = self.results.get("res_egmq1_csbp2x", {}).get("stochastic_infidelities", [])
+                csb_a = self.results.get("res_egmq1_csbp2x", {}).get("angle_errors", [])
 
-            rb = self.results.get("res_egmq2_rb", {}).get(f"[{x}, {y}]", {}).get("error_rate", "N/A")
-            rb = f"{rb:.4f}" if isinstance(rb, float) else rb
+                csb_p = f"{csb_p[q_idx]:.4f}" if isinstance(csb_p, list) and q_idx < len(csb_p) and isinstance(csb_p[q_idx], float) else "N/A"
+                csb_s = f"{csb_s[q_idx]:.4f}" if isinstance(csb_s, list) and q_idx < len(csb_s) and isinstance(csb_s[q_idx], float) else "N/A"
+                csb_a = f"{csb_a[q_idx]:.4f}" if isinstance(csb_a, list) and q_idx < len(csb_a) and isinstance(csb_a[q_idx], float) else "N/A"
 
-            xeb_list = self.results.get("res_egmq2_xeb", {}).get("hardware", [])
-            index = self.qubit_connectivity.index(pair)
-            xeb = f"{xeb_list[index]:.4f}" if isinstance(xeb_list, list) and index < len(xeb_list) and isinstance(xeb_list[index], float) else "N/A"
+                csb_single_q_data.append([str(q_idx), csb_p, csb_s, csb_a])
 
-            csb_p = self.results.get("res_egmq2_csb_cz", {}).get("qubit_pairs_results", [])
-            if index < len(csb_p):
-                process_infid = csb_p[index].get("process_infidelity", "N/A")
-                process_infid = f"{process_infid:.4f}" if isinstance(process_infid, float) else process_infid
+            report += self._format_table(csb_single_q_columns, csb_single_q_data) + "\n\n"
 
-                stotistic_infid = csb_p[index].get("stochastic_infidelity", "N/A")
-                stotistic_infid = f"{stotistic_infid:.4f}" if isinstance(stotistic_infid, float) else stotistic_infid
+        # Section 4: Two-Qubit Gate Quality - RB
+        if rbq2_selected:
+            report += "## Section 4: Two-Qubit Gate Quality - RB\n"
+            report += "-" * 50 + "\n"
+            report += "**Randomized Benchmarking (RB)**: Measures gate error rates for two qubits.\n\n"
+            
+            # Build Two-Qubit Gate Quality data (RB)
+            two_q_data = []
+            for pair in self.qubit_connectivity:
+                x, y = pair
+                qubits = f"({x},{y})"
+                rb = self.results.get("res_egmq2_rb", {}).get(f"[{x}, {y}]", {}).get("error_rate", "N/A")
+                rb = f"{rb:.4f}" if isinstance(rb, float) else rb
+                two_q_data.append([qubits, rb, "N/A"])  # XEB column as "N/A" temporarily for this section
 
-                theta_error = csb_p[index].get("theta_error", "N/A")
-                phi_error = csb_p[index].get("phi_error", "N/A")
-                formatted_csb_t = f"{theta_error:.4f}" if isinstance(theta_error, float) else "N/A"
-                formatted_csb_a = f"{phi_error:.4f}" if isinstance(phi_error, float) else "N/A"
-            else:
-                process_infid = "N/A"
-                stotistic_infid = "N/A"
-                formatted_csb_t = "N/A"
-                formatted_csb_a = "N/A"
+            report += self._format_table(two_q_columns, two_q_data) + "\n\n"
 
-            two_q_data.append([qubits, rb, xeb, process_infid, stotistic_infid, formatted_csb_t, formatted_csb_a])
+        # Section 5: Two-Qubit Gate Quality - XEB
+        if xebq2_selected:
+            report += "## Section 5: Two-Qubit Gate Quality - XEB\n"
+            report += "-" * 50 + "\n"
+            report += "**Cross-Entropy Benchmarking (XEB)**: Evaluates two-qubit gate fidelity.\n\n"
 
-        # Build Multi-Qubit Gates Quality - Fidelity_GHZ data
-        multi_q_data_ghz = []
-        metric_name_ghz = "res_egmqm_ghz"
-        metric_data_ghz = self.results.get(metric_name_ghz, {})
-        fidelity_list = metric_data_ghz.get("fidelity", [])
-        if len(fidelity_list) == 6:
-            nqubits_ghz = [3, 4, 5, 6, 7, 8]
-            for nq, fid in zip(nqubits_ghz, fidelity_list):
-                formatted_fid = f"{fid:.4f}" if isinstance(fid, float) else fid
-                multi_q_data_ghz.append([str(nq), formatted_fid])
+            # Build Two-Qubit Gate Quality data (XEB)
+            two_q_data = []
+            for pair in self.qubit_connectivity:
+                x, y = pair
+                qubits = f"({x},{y})"
+                xeb_list = self.results.get("res_egmq2_xeb", {}).get("hardware", [])
+                index = self.qubit_connectivity.index(pair)
+                xeb = f"{xeb_list[index]:.4f}" if isinstance(xeb_list, list) and index < len(xeb_list) and isinstance(xeb_list[index], float) else "N/A"
+                two_q_data.append([qubits, "N/A", xeb])  # RB column as "N/A" temporarily for this section
 
-        # Generate Quantum Volume and MRB tables
-        multi_q_table_stqv, max_qv = self.draw_res_egmqm_stqv()
-        multi_q_table_mrb = self.draw_res_egmqm_mrb()
+            report += self._format_table(two_q_columns, two_q_data) + "\n\n"
 
-        # Assemble the full report
-        report += f"{main_title.center(80)}\n\n"
-        report += "Single-Qubit Gate Quality\n\n" + self._format_table(single_q_columns, single_q_data) + "\n\n"
-        report += "Two-Qubit Gate Quality\n\n" + self._format_table(two_q_columns, two_q_data) + "\n\n"
+        # Section 6: Two-Qubit Gate Quality - CSB
+        if csbq2_selected:
+            report += "## Section 6: Two-Qubit Gate Quality - CSB\n"
+            report += "-" * 50 + "\n"
+            report += "**Channel Spectrum Benchmarking (CSB)**: Evaluates process, stochastic, and angle errors for qubit pairs.\n\n"
 
-        if multi_q_data_ghz:
-            report += "Multi-Qubit Gates Quality - Fidelity GHZ\n\n"
+            # Build CSB results for Two-Qubits (CSB_P, CSB_S, CSB_T, CSB_A)
+            csb_two_q_data = []
+            for pair in self.qubit_connectivity:
+                x, y = pair
+                csb_p = self.results.get("res_egmq2_csb_cz", {}).get("qubit_pairs_results", [])
+                index = self.qubit_connectivity.index(pair)
+                if index < len(csb_p):
+                    process_infid = csb_p[index].get("process_infidelity", "N/A")
+                    stochastic_infid = csb_p[index].get("stochastic_infidelity", "N/A")
+                    theta_error = csb_p[index].get("theta_error", "N/A")
+                    phi_error = csb_p[index].get("phi_error", "N/A")
+
+                    csb_two_q_data.append([f"({x},{y})", process_infid, stochastic_infid, theta_error, phi_error])
+                else:
+                    csb_two_q_data.append([f"({x},{y})", "N/A", "N/A", "N/A", "N/A"])
+
+            report += self._format_table(csb_two_q_columns, csb_two_q_data) + "\n\n"
+
+        # Section 7: Multi-Qubit Gate Quality - GHZ Fidelity
+        if ghzqm_selected:
+            report += "## Section 7: Multi-Qubit Gates Quality - Fidelity GHZ\n"
+            report += "-" * 50 + "\n"
+            report += "**N-Qubit GHZ state fidelity**: Measures the fidelity of GHZ states on multiple qubits.\n\n"
+
+            # Build Multi-Qubit Gates Quality - Fidelity_GHZ data
+            multi_q_data_ghz = []
+            metric_name_ghz = "res_egmqm_ghz"
+            metric_data_ghz = self.results.get(metric_name_ghz, {})
+            fidelity_list = metric_data_ghz.get("fidelity", [])
+            if len(fidelity_list) == 6:
+                nqubits_ghz = [3, 4, 5, 6, 7, 8]
+                for nq, fid in zip(nqubits_ghz, fidelity_list):
+                    formatted_fid = f"{fid:.4f}" if isinstance(fid, float) else fid
+                    multi_q_data_ghz.append([str(nq), formatted_fid])
+
             report += self._format_table(multi_q_columns_ghz, multi_q_data_ghz) + "\n\n"
 
-        if multi_q_table_stqv:
-            report += "Multi-Qubit Gates Quality - Quantum Volume\n\n" + multi_q_table_stqv + "\n"
-            if max_qv is not None:
-                report += f"Maximum Quantum Volume: {max_qv}\n"
+        # Section 8: Quantum Volume
+        if qvqm_selected:
+            report += "## Section 8: Multi-Qubit Gates Quality - Quantum Volume\n"
+            report += "-" * 50 + "\n"
+            report += "**Quantum Volume**: Measures the complexity of quantum circuits that a quantum computer can process.\n\n"
+            
+            # Dynamically extract Quantum Volume data from res_egmqm_stqv
+            quantum_volume_data = {}
+            for key, value in self.results.get("res_egmqm_stqv", {}).items():
+                nqubits = key.split('_')[-1]  # Extract qubit count from the key like 'nqubits_nqubits_2'
+                quantum_volume_data[nqubits] = value.get("quantum_volume", 0)
 
-        if multi_q_table_mrb:
-            report += "Multi-Qubit Gates Quality - MRB\n\n" + multi_q_table_mrb + "\n"
+            if quantum_volume_data:  # Only proceed if data is available
+                # Calculate Maximum Quantum Volume
+                max_quantum_volume = max(quantum_volume_data.values())
+
+                # Prepare data for the quantum volume table
+                quantum_volume_columns = ["NQubits"] + list(quantum_volume_data.keys())
+                quantum_volume_values = ["Quantum Volume"] + [str(quantum_volume_data[q]) for q in quantum_volume_data]
+
+                # Use _format_table to create the table with proper formatting
+                table = self._format_table(quantum_volume_columns, [quantum_volume_values])
+
+                # Add the quantum volume table to the report
+                report += table
+                report += f"\nMaximum Quantum Volume: {max_quantum_volume}\n\n"
+            else:
+                report += "**Quantum Volume data is missing or incomplete. Skipping this section.**\n\n"
+
+        # Section 9: MRB
+        if mrbqm_selected:
+            report += "## Section 9: Multi-Qubit Gates Quality - MRB\n"
+            report += "-" * 50 + "\n"
+            report += "**Multi-Qubit Randomized Benchmarking (MRB)**: Measures multi-qubit gate error rates for different qubit lengths.\n\n"
+
+            # Build MRB results for Multi-Qubits (Length 12, 4, 8)
+            mrb_data = []
+            mrb_results = self.results.get("res_egmqm_mrb", {}).get("qubits_for_length", {})
+
+            # Dynamically get the available lengths from the data (lengths 4, 8, and 12)
+            available_lengths = sorted(set(int(length) for qubit_count in mrb_results.values() for length in qubit_count.keys()))
+
+            # Get polarizations for error rates
+            polarizations = self.results.get("res_egmqm_mrb", {}).get("polarizations", [])
+
+            # Loop through each qubit count and associated lengths
+            for qubit_count, lengths in mrb_results.items():
+                # Initialize row for this qubit_count
+                row = [str(qubit_count), ", ".join(map(str, lengths.get("12", [])))]
+
+                # For each length in the available lengths, get the corresponding error rate
+                for length in available_lengths:
+                    # Ensure that the length exists in the list of qubits for this qubit count
+                    if str(length) in lengths:
+                        # Check if there are enough entries in polarizations for this length
+                        if length - 4 < len(polarizations[0]):  # Ensure polarization data is available for this length
+                            error_rate = polarizations[0][length - 4]  # Access the error rate from polarizations
+                            row.append(f"{error_rate:.4f}")
+                        else:
+                            row.append("N/A")
+                    else:
+                        row.append("N/A")
+                
+                # Now append the row to the mrb_data
+                mrb_data.append(row)
+
+            # Define the table headers
+            mrb_columns = ["Qubit Count", "Qubits"] + [f"Length {length}" for length in available_lengths]
+
+            # Format the table output (you can format it into a readable structure or use the `self._format_table` method)
+            report += self._format_table(mrb_columns, mrb_data) + "\n\n"
+
+        # Section 10: CLOPS
+        if clopsqm_selected:
+            clops = self.results.get("res_egmqm_clops", {}).get("CLOPSQM", "N/A")
+
+            # Check if 'clops' is a valid number (float or int). If it's not, use "N/A".
+            if clops != "N/A":
+                try:
+                    # Try to convert 'clops' to a float and format it in scientific notation
+                    clops = float(clops)
+                    report += f"CLOPS: {clops:.4e}\n"
+                except ValueError:
+                    # If 'clops' is not a valid number, print "N/A"
+                    report += f"CLOPS: N/A\n"
+            else:
+                # If 'clops' is "N/A", simply display "N/A"
+                report += f"CLOPS: N/A\n"
+
+        # Section 11: VQE
+        if vqeqm_selected:
+            vqe = self.results.get("res_egmqm_vqe", {})
+            vqe_problem = vqe.get("Problem Description", "N/A")
+            final_energy = vqe.get("Final Energy", "N/A")
+            report += "\n## Section 12: Multi-Qubit Gates Application\n" + "-" * 50 + "\n"
+            report += f"VQE Problem: {vqe_problem}\n"
+            report += f"Final Energy: {final_energy}\n"
 
         # Save the report to a file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -635,10 +871,21 @@ class EGMReportManager:
             f.write(report)
         print(f"Level02 report saved as '{output_path}'.")
 
-    def egm_level02_figure(self):
+
+
+    def egm_level02_figure(self,
+            rbq1_selected=True,
+            xebq1_selected=True,
+            csbq1_selected=True,
+            rbq2_selected=True,
+            xebq2_selected=True,
+            mrbqm_selected=True,
+            ghzqm_selected=True):  # New parameter to select GHZ plot
         """
-        Generate visualizations for metrics and save them as images.
+        Generate visualizations for metrics and save them as images based on selected options.
         """
+
+        # selected options for each figure (set to True by default, you can set them to False to skip specific plots)
         visualizer = VisualPlot(self.json_file_path)
 
         # Define output file paths
@@ -647,28 +894,45 @@ class EGMReportManager:
         csbq1_path = os.path.join(self.figures_dir, "CSBQ1_Heatmap.png")
         rbq2_path = os.path.join(self.figures_dir, "RBQ2_Heatmap.png")
         xebq2_path = os.path.join(self.figures_dir, "XEBQ2_Heatmap.png")
+        mrbqm_path = os.path.join(self.figures_dir, "MRBQM_Heatmap.png")
+        ghzqm_path = os.path.join(self.figures_dir, "GHZQM_Fidelity.png")  # Path for GHZ fidelity plot
 
-        # Generate and save the plots
-        visualizer.plot_rbq1(grid_size=(5, 5))
-        plt.savefig(rbq1_path)
-        plt.close()
+        # Generate and save the plots based on the selected options
+        if rbq1_selected:
+            visualizer.plot_rbq1(grid_size=(5, 5))
+            plt.savefig(rbq1_path)
+            plt.close()
 
-        visualizer.plot_xebq1(grid_size=(5, 5))
-        plt.savefig(xebq1_path)
-        plt.close()
+        if xebq1_selected:
+            visualizer.plot_xebq1(grid_size=(5, 5))
+            plt.savefig(xebq1_path)
+            plt.close()
 
-        visualizer.plot_csbq1(grid_size=(5, 5))
-        plt.savefig(csbq1_path)
-        plt.close()
+        if csbq1_selected:
+            visualizer.plot_csbq1(grid_size=(5, 5))
+            plt.savefig(csbq1_path)
+            plt.close()
 
-        visualizer.plot_rbq2()
-        plt.savefig(rbq2_path)
-        plt.close()
+        if rbq2_selected:
+            visualizer.plot_rbq2()
+            plt.savefig(rbq2_path)
+            plt.close()
 
-        visualizer.plot_xebq2()
-        plt.savefig(xebq2_path)
-        plt.close()
+        if xebq2_selected:
+            visualizer.plot_xebq2()
+            plt.savefig(xebq2_path)
+            plt.close()
 
+        if mrbqm_selected:
+            visualizer.plot_mrbqm()
+            plt.savefig(mrbqm_path)
+            plt.close()
+
+        # Generate and save the GHZ fidelity plot if selected
+        if ghzqm_selected:  # Check if the GHZ plot is selected
+            visualizer.plot_ghzqm_fidelity()  # Call the GHZ fidelity plot function
+            plt.savefig(ghzqm_path)  # Save the plot as a PNG file
+            plt.close()
 
 
 # import os

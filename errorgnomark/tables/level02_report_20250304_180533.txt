@@ -1,0 +1,137 @@
+                       Errorgnomark Report of 'QXX' Chip                        
+================================================================================
+
+Chip Structure: 12 rows x 13 columns
+--------------------------------------------------
+Selected Qubit Indices: [0, 1, 2, 3]
+Qubit Connectivity: [[0, 1], [1, 2], [2, 3]]
+================================================================================
+
+Chip Structure Layout:
+Q Q Q Q . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+. . . . . . . . . . . . .
+
+## Section 1: Single-Qubit Gate Quality
+--------------------------------------------------
+**Randomized Benchmarking (RB)**: Measures gate error rates.
+**Cross-Entropy Benchmarking (XEB)**: Evaluates gate fidelity.
+
+┌─────┬──────┬──────┐
+│Qubit│  RB  │ XEB  │
+├─────┼──────┼──────┤
+│  0  │0.0011│0.0329│
+│  1  │0.0039│0.0401│
+│  2  │0.0040│0.0215│
+│  3  │0.0007│0.0402│
+└─────┴──────┴──────┘
+
+
+## Section 2: Single-Qubit Gate Quality - CSB (pi/2 - X)
+--------------------------------------------------
+**Channel Spectrum Benchmarking (CSB)**: Measures process, stochastic, and angle error rates for qubit operations.
+**CSB_P**: Process Infidelity
+**CSB_S**: Stochastic Infidelity
+**CSB_A**: Angle Error
+
+┌─────┬──────┬──────┬──────┐
+│Qubit│CSB_P │CSB_S │CSB_A │
+├─────┼──────┼──────┼──────┤
+│  0  │0.0426│0.0419│0.0007│
+│  1  │0.0056│0.0056│ N/A  │
+│  2  │0.0062│0.0062│ N/A  │
+│  3  │0.0043│0.0043│0.0007│
+└─────┴──────┴──────┴──────┘
+
+
+## Section 3: Two-Qubit Gate Quality
+--------------------------------------------------
+**Randomized Benchmarking (RB)**: Measures gate error rates for two qubits.
+**Cross-Entropy Benchmarking (XEB)**: Evaluates two-qubit gate fidelity.
+
+┌──────┬──────┬──────┐
+│Qubits│  RB  │ XEB  │
+├──────┼──────┼──────┤
+│(0,1) │0.0025│0.3833│
+│(1,2) │0.0095│0.2271│
+│(2,3) │0.0056│0.1202│
+└──────┴──────┴──────┘
+
+
+## Section 4: Two-Qubit Gate Quality - CSB
+--------------------------------------------------
+**Channel Spectrum Benchmarking (CSB)** for Two-Qubits evaluates process, stochastic, and angle errors for qubit pairs.
+**CSB_P**: Process Infidelity
+**CSB_S**: Stochastic Infidelity
+**CSB_T**: Theta Error
+**CSB_A**: Phi Error
+
+┌──────┬─────┬─────┬─────┬─────┐
+│Qubits│CSB_P│CSB_S│CSB_T│CSB_A│
+├──────┼─────┼─────┼─────┼─────┤
+│(0,1) │ N/A │ N/A │ N/A │ N/A │
+│(1,2) │ N/A │ N/A │ N/A │ N/A │
+│(2,3) │ N/A │ N/A │ N/A │ N/A │
+└──────┴─────┴─────┴─────┴─────┘
+
+
+## Section 5: Multi-Qubit Gates Quality
+--------------------------------------------------
+**N-Qubit GHZ state fidelity**: Measures the fidelity of GHZ states on multiple qubits.
+
+┌───────┬────────────┐
+│NQUBITS│FIDELITY_GHZ│
+├───────┼────────────┤
+│   3   │   1.0000   │
+│   4   │   0.9987   │
+│   5   │   1.0000   │
+│   6   │   1.0000   │
+│   7   │   0.9987   │
+│   8   │   1.0000   │
+└───────┴────────────┘
+
+
+## Section X: Multi-Qubit Gates Quality - Quantum Volume
+--------------------------------------------------
+**Quantum Volume**: Measures the complexity of quantum circuits that a quantum computer can process. Based on the number of qubits and their connectivity.
+
+
+    ┌──────────────┬───┬───┬───┬───┐
+    │   NQubits    │ 2 │ 3 │ 4 │ 5 │
+    ├──────────────┼───┼───┼───┼───┤
+    │ Quantum Volume │ 4 │ 8 │ 16 │ 32 │
+    └──────────────┴───┴───┴───┴───┘
+    
+Maximum Quantum Volume: 32
+
+## Section 6: Multi-Qubit Gates Quality - MRB
+--------------------------------------------------
+**Multi-Qubit Randomized Benchmarking (MRB)**: Measures multi-qubit gate error rates for different qubit lengths.
+
+┌───────────┬──────────┬────────┬────────┬─────────┐
+│Qubit Count│  Qubits  │Length 4│Length 8│Length 12│
+├───────────┼──────────┼────────┼────────┼─────────┤
+│     2     │   0, 1   │ 0.5785 │  N/A   │   N/A   │
+│     4     │0, 1, 2, 3│ 0.5785 │  N/A   │   N/A   │
+└───────────┴──────────┴────────┴────────┴─────────┘
+
+
+
+## Section 7: Multi-Qubit Gates Speed
+--------------------------------------------------
+CLOPS: 2.0307e+03
+**CLOPS** is a metric indicating the execution speed of quantum processors, specifically measuring how quickly a processor can run layers of parameterized circuits similar to those used for Quantum Volume.
+
+## Section 8: Multi-Qubit Gates Application
+--------------------------------------------------
+VQE Problem: Hamiltonian with 4 terms on 2 qubits using EfficientSU2 ansatz.
+Final Energy: -0.7029303861032179

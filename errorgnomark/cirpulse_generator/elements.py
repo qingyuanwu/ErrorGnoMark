@@ -208,8 +208,8 @@ class csbq1_circuit_generator:
             QuantumCircuit: The generated quantum circuit.
         """
         # Ensure the number of qubits matches the length of qubit_indices
-        num_qubits = len(qubit_indices)
-        qc = QuantumCircuit(num_qubits, num_qubits)
+        # num_qubits = len(qubit_indices)
+        qc = QuantumCircuit(qubit_indices[0]+ 1, qubit_indices[0]+ 1)
 
         # Prepare the initial state
         if ini_mode == 'x':

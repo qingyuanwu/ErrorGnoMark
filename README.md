@@ -5,7 +5,7 @@
 ErrorGnoMark (Error Diagnose & Benchmark) is a comprehensive tool developed by the Quantum Operating System Group at the Beijing Academy of Quantum Information Sciences. It aims to provide a complete and thorough benchmark and diagnostic information for quantum chip[^2][^3], covering different layers of the quantum operating system: physical layer, quantum gate (circuit) layer, and application Layer. It evaluates key dimensions such as Scalability, Quality, and Speed[^1]. 
 
 <p align="center">
-  <img src="errorgnomark/egm.jpg" alt="ErrorGnoMark Illustration" width="500px">
+  <img src="errorgnomark/bmqc.png" alt="ErrorGnoMark Illustration" width="500px">
 </p>
 
 ### Potential Applications
@@ -120,7 +120,7 @@ ErrorGnoMark is licensed under the Apache License.
 
 [^2]: **Optimizing quantum gates towards the scale of logical qubits**, Klimov, P.V., Bengtsson, A., Quintana, C. et al., *Nature Communications*, 15, 2442 (2024). [https://doi.org/10.1038/s41467-024-46623-y](https://doi.org/10.1038/s41467-024-46623-y).
 
-[^3]: **Benchmarking universal quantum gates via channel spectrum**, Gu, Y., Zhuang, WF., Chai, X. et al., *Nature Communications*, 14, 5880 (2023). [https://doi.org/10.1038/s41467-023-41598-8](https://doi.org/10.1038/s41467-023-41598-8).
+[^3]: **Benchmarking universal quantum gates via channel spectrum**, Yanwu Gu, Wei-Feng Zhuang, Xudan Chai & Dong E. Liu , *Nature Communications*, 14, 5880 (2023). [https://doi.org/10.1038/s41467-023-41598-8](https://doi.org/10.1038/s41467-023-41598-8).
 
 
 

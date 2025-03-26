@@ -1,0 +1,50 @@
+                       Errorgnomark Report of 'QXX' Chip                        
+
+Single-Qubit Gate Quality
+
+┌─────┬───┬───┬─────┬─────┬─────┐
+│Qubit│ RB│XEB│CSB_P│CSB_S│CSB_A│
+├─────┼───┼───┼─────┼─────┼─────┤
+│  0  │N/A│N/A│ N/A │ N/A │ N/A │
+│  1  │N/A│N/A│ N/A │ N/A │ N/A │
+│  2  │N/A│N/A│ N/A │ N/A │ N/A │
+│  3  │N/A│N/A│ N/A │ N/A │ N/A │
+│  4  │N/A│N/A│ N/A │ N/A │ N/A │
+│  5  │N/A│N/A│ N/A │ N/A │ N/A │
+│  6  │N/A│N/A│ N/A │ N/A │ N/A │
+│  7  │N/A│N/A│ N/A │ N/A │ N/A │
+│  8  │N/A│N/A│ N/A │ N/A │ N/A │
+└─────┴───┴───┴─────┴─────┴─────┘
+
+
+Two-Qubit Gate Quality
+
+┌──────┬───┬───┬─────┬─────┬─────┬─────┐
+│Qubits│ RB│XEB│CSB_P│CSB_S│CSB_T│CSB_A│
+├──────┼───┼───┼─────┼─────┼─────┼─────┤
+│(0,1) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+│(1,2) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+│(2,3) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+│(3,4) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+│(4,5) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+│(5,6) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+│(6,7) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+│(7,8) │N/A│N/A│ N/A │ N/A │ N/A │ N/A │
+└──────┴───┴───┴─────┴─────┴─────┴─────┘
+
+
+Multi-Qubit Gates Quality - Quantum Volume
+
+N/A
+Multi-Qubit Gates Quality - MRB
+
+                               EGM_MultiQubit_MRB                       
+        ┌───────────┬──────────────────────┬─────────┬────────┬────────┐
+        │Qubit Count│        Qubits        │Length 12│Length 4│Length 8│
+        ├───────────┼──────────────────────┼─────────┼────────┼────────┤
+        │     2     │         0, 1         │  0.4993 │ 0.3052 │ 0.2418 │
+        │     4     │      0, 1, 2, 3      │  0.1689 │ 0.1694 │ 0.2080 │
+        │     6     │   0, 1, 2, 3, 4, 5   │  0.0704 │ 0.3108 │ 0.0584 │
+        │     8     │0, 1, 2, 3, 4, 5, 6, 7│  0.0581 │ 0.0324 │ 0.0145 │
+        └───────────┴──────────────────────┴─────────┴────────┴────────┘
+

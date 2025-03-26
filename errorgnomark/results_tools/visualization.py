@@ -33,7 +33,7 @@ class VisualPlot:
         with open(self.file_path, "r") as f:
             return json.load(f)
 
-    def plot_heatmap_with_spacing(self, grid, title, colorbar_label, cmap='viridis'):
+    def plot_heatmap_with_spacing(self, grid, title, colorbar_label, cmap='viridis', save_path=None):
         """
         Create a heatmap with grid spacing to visualize benchmarking data.
         
@@ -42,6 +42,7 @@ class VisualPlot:
             title (str): Title of the heatmap.
             colorbar_label (str): Label for the colorbar.
             cmap (str): Colormap for the heatmap (default: 'viridis').
+            save_path (str, optional): Path to save the figure as a PNG file. If None, the figure is not saved.
         """
         fig, ax = plt.subplots()
         im = ax.imshow(grid, cmap=cmap, interpolation='nearest')
@@ -60,7 +61,15 @@ class VisualPlot:
         ax.set_title(title)
         ax.set_xlabel("Column")
         ax.set_ylabel("Row")
+
+        # Save the figure if save_path is provided
+        if save_path:
+            plt.savefig(save_path, dpi=300)  # Save with high resolution
+            print(f"Figure saved as {save_path}")
+
+        # Show the plot
         plt.show()
+
 
     def plot_rbq1(self, grid_size=(5, 5)):
         """
@@ -170,3 +179,71 @@ class VisualPlot:
             grid[pair[1], pair[0]] = xeb_data[index]
         
         self.plot_heatmap_with_spacing(grid, "Xebq2 Heatmap", "XEB Error Rate", cmap='viridis')
+
+
+    def plot_ghzqm_fidelity(self):
+        """
+        Plot GHZ state fidelity for different qubit counts (3, 4, 5, 6, 7, 8).
+        """
+        # Extract fidelity data from the 'res_egmqm_ghz' key
+        ghz_fidelity = self.data['results']['res_egmqm_ghz']['fidelity']
+        qubit_indices = self.data['results']['res_egmqm_ghz']['qubit_index']
+        
+        # Quibit counts we're interested in
+        qubit_counts = [3, 4, 5, 6, 7, 8]
+
+        # Interpolate fidelity values for each qubit count
+        fidelity_values = []
+        for count in qubit_counts:
+            # Find the closest matching qubit index in the data
+            if count - 3 < len(ghz_fidelity):
+                fidelity_values.append(ghz_fidelity[count - 3])
+            else:
+                fidelity_values.append(np.nan)
+
+        # Plotting
+        plt.figure(figsize=(8, 6))
+        plt.plot(qubit_counts, fidelity_values, marker='o', linestyle='-', color='b', label='GHZ Fidelity')
+
+        # Adding labels and title
+        plt.title('GHZ State Fidelity vs Qubit Count', fontsize=16)
+        plt.xlabel('Qubit Count', fontsize=14)
+        plt.ylabel('Fidelity', fontsize=14)
+        plt.grid(True)
+        plt.xticks(qubit_counts)
+        plt.yticks(np.linspace(0, 1, 11))
+
+        # Show legend
+        plt.legend()
+
+        # Display the plot
+        plt.tight_layout()
+        plt.show()
+        
+    def plot_mrbqm(self):
+        """
+        Generate a heatmap for the MRB (polarization) values.
+        This heatmap will plot qubit counts (2, 4, 6, 8) on the x-axis,
+        lengths (4, 8, 12) on the y-axis, and polarization values as color intensity.
+        """
+        # Extract polarization and qubits_for_length from the data
+        polarizations = self.data["results"]["res_egmqm_mrb"]["polarizations"]
+        qubits_for_length = self.data["results"]["res_egmqm_mrb"]["qubits_for_length"]
+
+        # Get the unique lengths available in the data
+        unique_lengths = sorted(set(length for qubit_group in qubits_for_length.values()
+                                    for length in qubit_group.keys()))
+
+        # Create a matrix to store the polarization values (rows: lengths, columns: qubit counts)
+        grid = np.zeros((len(unique_lengths), len(qubits_for_length)))
+
+        # Iterate over each qubit count and the corresponding lengths
+        for i, qubit_count in enumerate(sorted(qubits_for_length.keys())):
+            # Get the corresponding qubits for the current qubit_count
+            for j, length in enumerate(unique_lengths):
+                # Get the polarization value for the given qubit_count and length
+                polarization_value = polarizations[i][j]
+                grid[j, i] = polarization_value  # Store the value in the matrix
+
+        # Plot the heatmap
+        self.plot_heatmap_with_spacing(grid, "MRBQM Heatmap (Polarization)", "Polarization", cmap='Blues')

@@ -9,7 +9,7 @@ from datetime import datetime  # For handling date and time
 from requests.exceptions import RequestException, ReadTimeout  # For HTTP requests and error handling
 from tqdm import tqdm  # For progress bar visualization
 
-# Local imports
+# Add the ErrorGnoMark package to the system path
 from errorgnomark.cirpulse_generator.qubit_selector import qubit_selection, chip  # For qubit selection and chip setup
 from errorgnomark.configuration import (  # For various quality and benchmarking configurations
     QualityQ1Gate,
@@ -21,9 +21,6 @@ from errorgnomark.configuration import (  # For various quality and benchmarking
 from errorgnomark.results_tools.egm_report_tools import EGMReportManager  # For generating reports
 
 
-
-
-
 class Errorgnomarker(chip):
     """
     Retrieves error and performance metrics for qubits and quantum gates at various levels.
@@ -33,39 +30,30 @@ class Errorgnomarker(chip):
     def __init__(self, chip_name="Baihua", result_get='noisysimulation'):
         """
         Initializes the ErrorGnoMarker with the specified chip configuration.
-
-        Parameters:
-            chip_name (str): Name of the chip configuration.
         """
         super().__init__()  # Initialize the base chip class
-
         self.chip_name = chip_name
 
         if self.chip_name == "Baihua":
-            # Initialize the chip with specific rows and columns
-            self.rows = 13
+            self.rows = 12
             self.columns = 13
         else:
-            # Handle other chip configurations if necessary
             raise ValueError(f"Unsupported chip name: {self.chip_name}")
 
         self.result_get = result_get
-        # Step 1: Define selection options
         self.selection_options = {
             'max_qubits_per_row': 13,
             'min_qubit_index': 0,
-            'max_qubit_index': 100
+            'max_qubit_index': 155
         }
 
-        # Step 2: Initialize qubit selection with constraints
         self.selector = qubit_selection(
             chip=self,
-            qubit_index_max=100,
-            qubit_number=25,
+            qubit_index_max=155,
+            qubit_number=9,
             option=self.selection_options
         )
 
-        # Perform qubit selection
         self.selection = self.selector.quselected()
         self.qubit_index_list = self.selection["qubit_index_list"]
         self.qubit_connectivity = self.selection["qubit_connectivity"]
@@ -75,34 +63,27 @@ class Errorgnomarker(chip):
         print("Qubit Connectivity:", self.qubit_connectivity)
         print("=" * 50)
 
-        # Initialize configuration objects with the selected qubits and connectivity
-
         self.config_quality_q1gate = QualityQ1Gate(self.qubit_index_list, result_get=result_get)
         self.config_quality_q2gate = QualityQ2Gate(self.qubit_connectivity, result_get=result_get)
         self.config_quality_qmgate = QualityQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
         self.config_speed_qmgate = SpeedQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
         self.config_application_qmgate = ApplicationQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
 
-    def egm_run(self, egm_level='level_0', visual_table=None, visual_figure=None,
-                q1rb_selected=True, q1xeb_selected=True, q1csbp2x_selected=True,
-                q2rb_selected=True, qmgate_ghz_selected=True, qmgate_stqv_selected=True,
-                qmgate_mrb_selected=True, qmgate_clops_selected=True, qmgate_vqe_selected=True):
+    def egm_run(self, 
+        rbq1_selected=True,
+        xebq1_selected=True,
+        csbq1_selected=True,
+        rbq2_selected=True,
+        xebq2_selected=True,
+        csbq2_selected=True,
+        ghzqm_selected=True,
+        qvqm_selected=True,
+        mrbqm_selected=True,
+        clopsqm_selected=True,
+        vqeqm_selected=True):
         """
         Executes the EGM metrics and saves the results to a JSON file.
-
-        Parameters:
-            egm_level (str): Level of detail ('level_0', 'level_1', 'level_2').
-            visual_table (bool): If True, generate the level02 table.
-            visual_figure (bool): If True, generate the level02 figures.
-            q1rb_selected (bool): Whether to execute the Single Qubit RB method.
-            q1xeb_selected (bool): Whether to execute the Single Qubit XEB method.
-            q1csbp2x_selected (bool): Whether to execute the Single Qubit CSB method.
-            q2rb_selected (bool): Whether to execute the Two Qubit RB method.
-            qmgate_ghz_selected (bool): Whether to execute the m-Qubit GHZ Fidelity method.
-            qmgate_stqv_selected (bool): Whether to execute the m-Qubit StanQV Fidelity method.
-            qmgate_mrb_selected (bool): Whether to execute the m-Qubit MRB Fidelity method.
-            qmgate_clops_selected (bool): Whether to execute the m-Qubit Speed CLOPS method.
-            qmgate_vqe_selected (bool): Whether to execute the m-Qubit VQE method.
+        Based on the selection flags, executes the relevant metric calculation.
         """
         results = {}
         total_tasks = 10  # Total tasks (metrics to be executed)
@@ -112,116 +93,75 @@ class Errorgnomarker(chip):
         total_start_time = time.time()
 
         try:
-            # Single Qubit RB
-            if q1rb_selected:
-                print("[Running] Single Qubit RB...")
-                start_time = time.time()
-                res_egmq1_rb = self.config_quality_q1gate.q1rb()
-                elapsed_time = time.time() - start_time
-                print(f"Single Qubit RB completed in {elapsed_time:.2f} seconds.")
-                if res_egmq1_rb is None:
-                    raise ValueError("q1rb returned None")
-                results['res_egmq1_rb'] = res_egmq1_rb
-                progress_bar.update(1)
+            # Execute selected metrics
+            if rbq1_selected:
+                try:
+                    results['res_egmq1_rb'] = self._run_single_qubit_rb()
+                except Exception as e:
+                    print(f"Error during Single Qubit RB: {e}")
 
-            # Single Qubit XEB
-            if q1xeb_selected:
-                print("[Running] Single Qubit XEB...")
-                start_time = time.time()
-                res_egmq1_xeb = self.config_quality_q1gate.q1xeb()
-                elapsed_time = time.time() - start_time
-                print(f"Single Qubit XEB completed in {elapsed_time:.2f} seconds.")
-                if res_egmq1_xeb is None:
-                    raise ValueError("q1xeb returned None")
-                results['res_egmq1_xeb'] = res_egmq1_xeb
-                progress_bar.update(1)
+            if xebq1_selected:
+                try:
+                    results['res_egmq1_xeb'] = self._run_single_qubit_xeb()
+                except Exception as e:
+                    print(f"Error during Single Qubit XEB: {e}")
 
-            # Single Qubit CSB
-            if q1csbp2x_selected:
-                print("[Running] Single Qubit CSB...")
-                start_time = time.time()
-                res_egmq1_csbp2x = self.config_quality_q1gate.q1csb_pi_over_2_x()
-                elapsed_time = time.time() - start_time
-                print(f"Single Qubit CSB completed in {elapsed_time:.2f} seconds.")
-                if res_egmq1_csbp2x is None:
-                    raise ValueError("q1csb_pi_over_2_x returned None")
-                results['res_egmq1_csbp2x'] = res_egmq1_csbp2x
-                progress_bar.update(1)
+            if csbq1_selected:
+                try:
+                    results['res_egmq1_csbp2x'] = self._run_single_qubit_csb()
+                except Exception as e:
+                    print(f"Error during Single Qubit CSB: {e}")
 
-            # Two Qubit RB
-            if q2rb_selected:
-                print("[Running] Two Qubit RB...")
-                start_time = time.time()
-                res_egmq2_rb = self.config_quality_q2gate.q2rb()
-                elapsed_time = time.time() - start_time
-                print(f"Two Qubit RB completed in {elapsed_time:.2f} seconds.")
-                if res_egmq2_rb is None:
-                    raise ValueError("q2rb returned None")
-                results['res_egmq2_rb'] = res_egmq2_rb
-                progress_bar.update(1)
+            if rbq2_selected:
+                try:
+                    results['res_egmq2_rb'] = self._run_two_qubit_rb()
+                except Exception as e:
+                    print(f"Error during Two Qubit RB: {e}")
 
-            # m-Qubit GHZ Fidelity
-            if qmgate_ghz_selected:
-                print("[Running] m-Qubit GHZ Fidelity...")
-                start_time = time.time()
-                res_egmqm_ghz = self.config_quality_qmgate.qmghz_fidelity()
-                elapsed_time = time.time() - start_time
-                print(f"m-Qubit GHZ Fidelity completed in {elapsed_time:.2f} seconds.")
-                if res_egmqm_ghz is None:
-                    raise ValueError("qmghz_fidelity returned None")
-                results['res_egmqm_ghz'] = res_egmqm_ghz
-                progress_bar.update(1)
+            if xebq2_selected:
+                try:
+                    results['res_egmq2_xeb'] = self._run_two_qubit_xeb()
+                except Exception as e:
+                    print(f"Error during Two Qubit XEB: {e}")
 
-            # m-Qubit StanQV Fidelity
-            if qmgate_stqv_selected:
-                print("[Running] m-Qubit StanQV Fidelity...")
-                start_time = time.time()
-                res_egmqm_stqv = self.config_quality_qmgate.qmstanqv()
-                elapsed_time = time.time() - start_time
-                print(f"m-Qubit StanQV Fidelity completed in {elapsed_time:.2f} seconds.")
-                if res_egmqm_stqv is None:
-                    raise ValueError("qmstanqv returned None")
-                results['res_egmqm_stqv'] = res_egmqm_stqv
-                progress_bar.update(1)
+            if csbq2_selected:
+                try:
+                    results['res_egmq2_csb'] = self._run_two_qubit_csb()
+                except Exception as e:
+                    print(f"Error during Two Qubit CSB: {e}")
 
-            # m-Qubit MRB Fidelity
-            if qmgate_mrb_selected:
-                print("[Running] m-Qubit MRB Fidelity...")
-                start_time = time.time()
-                res_egmqm_mrb = self.config_quality_qmgate.qmmrb()
-                elapsed_time = time.time() - start_time
-                print(f"m-Qubit MRB Fidelity completed in {elapsed_time:.2f} seconds.")
-                if res_egmqm_mrb is None:
-                    raise ValueError("qmmrb returned None")
-                results['res_egmqm_mrb'] = res_egmqm_mrb
-                progress_bar.update(1)
+            if ghzqm_selected:
+                try:
+                    results['res_egmqm_ghz'] = self._run_m_qubit_ghz()
+                except Exception as e:
+                    print(f"Error during m-Qubit GHZ Fidelity: {e}")
 
-            # m-Qubit Speed CLOPS
-            if qmgate_clops_selected:
-                print("[Running] m-Qubit Speed CLOPS...")
-                start_time = time.time()
-                res_egmqm_clops = self.config_speed_qmgate.qmclops()
-                elapsed_time = time.time() - start_time
-                print(f"m-Qubit Speed CLOPS completed in {elapsed_time:.2f} seconds.")
-                if res_egmqm_clops is None:
-                    raise ValueError("qmclops returned None")
-                results['res_egmqm_clops'] = res_egmqm_clops
-                progress_bar.update(1)
+            if qvqm_selected:
+                try:
+                    results['res_egmqm_stqv'] = self._run_m_qubit_stqv()
+                except Exception as e:
+                    print(f"Error during m-Qubit StanQV Fidelity: {e}")
 
-            # m-Qubit VQE
-            if qmgate_vqe_selected:
-                print("[Running] m-Qubit VQE...")
-                start_time = time.time()
-                res_egmqm_vqe = self.config_application_qmgate.qmVQE()
-                elapsed_time = time.time() - start_time
-                print(f"m-Qubit VQE completed in {elapsed_time:.2f} seconds.")
-                if res_egmqm_vqe is None:
-                    raise ValueError("qmVQE returned None")
-                results['res_egmqm_vqe'] = res_egmqm_vqe
-                progress_bar.update(1)
+            if mrbqm_selected:
+                try:
+                    results['res_egmqm_mrb'] = self._run_m_qubit_mrb()
+                except Exception as e:
+                    print(f"Error during m-Qubit MRB Fidelity: {e}")
+
+            if clopsqm_selected:
+                try:
+                    results['res_egmqm_clops'] = self._run_m_qubit_clops()
+                except Exception as e:
+                    print(f"Error during m-Qubit Speed CLOPS: {e}")
+
+            if vqeqm_selected:
+                try:
+                    results['res_egmqm_vqe'] = self._run_m_qubit_vqe()
+                except Exception as e:
+                    print(f"Error during m-Qubit VQE: {e}")
 
         except Exception as e:
-            print(f"An error occurred during execution: {e}")
+            print(f"An unexpected error occurred during execution: {e}")
         finally:
             progress_bar.close()
 
@@ -229,6 +169,92 @@ class Errorgnomarker(chip):
         total_elapsed_time = time.time() - total_start_time
         print(f"Total execution time: {total_elapsed_time:.2f} seconds.")
 
+        # Save results to JSON and return the filepath
+        filepath = self._save_results_to_json(results)
+
+        return results, filepath
+
+    def _run_single_qubit_rb(self):
+        start_time = time.time()
+        res = self.config_quality_q1gate.q1rb()
+        elapsed_time = time.time() - start_time
+        print(f"Single Qubit RB completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_single_qubit_xeb(self):
+        start_time = time.time()
+        res = self.config_quality_q1gate.q1xeb()
+        elapsed_time = time.time() - start_time
+        print(f"Single Qubit XEB completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_single_qubit_csb(self):
+        start_time = time.time()
+        res = self.config_quality_q1gate.q1csb_pi_over_2_x()
+        if res is None:
+            print("Error: Q1CSB π/2-x task did not complete successfully.")
+            return None
+        elapsed_time = time.time() - start_time
+        print(f"Single Qubit CSB completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_two_qubit_rb(self):
+        start_time = time.time()
+        res = self.config_quality_q2gate.q2rb()
+        elapsed_time = time.time() - start_time
+        print(f"Two Qubit RB completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_two_qubit_xeb(self):
+        start_time = time.time()
+        res = self.config_quality_q2gate.q2xeb()
+        elapsed_time = time.time() - start_time
+        print(f"Two Qubit XEB completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_two_qubit_csb(self):
+        start_time = time.time()
+        res = self.config_quality_q2gate.q2csb_cz()
+        elapsed_time = time.time() - start_time
+        print(f"Two Qubit CSB completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_m_qubit_ghz(self):
+        start_time = time.time()
+        res = self.config_quality_qmgate.qmghz_fidelity()
+        elapsed_time = time.time() - start_time
+        print(f"m-Qubit GHZ Fidelity completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_m_qubit_stqv(self):
+        start_time = time.time()
+        res = self.config_quality_qmgate.qmstanqv()
+        elapsed_time = time.time() - start_time
+        print(f"m-Qubit StanQV Fidelity completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_m_qubit_mrb(self):
+        start_time = time.time()
+        res = self.config_quality_qmgate.qmmrb()
+        elapsed_time = time.time() - start_time
+        print(f"m-Qubit MRB Fidelity completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_m_qubit_clops(self):
+        start_time = time.time()
+        res = self.config_speed_qmgate.qmclops()
+        elapsed_time = time.time() - start_time
+        print(f"m-Qubit Speed CLOPS completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _run_m_qubit_vqe(self):
+        start_time = time.time()
+        res = self.config_application_qmgate.qmVQE()
+        elapsed_time = time.time() - start_time
+        print(f"m-Qubit VQE completed in {elapsed_time:.2f} seconds.")
+        return res
+
+    def _save_results_to_json(self, results):
         # Create 'data_egm' folder if it does not exist
         if not os.path.exists('data_egm'):
             os.makedirs('data_egm')
@@ -236,7 +262,7 @@ class Errorgnomarker(chip):
         # Prepare the filename with chip name and current datetime
         current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{self.chip_name}_egm_data_{current_datetime}.json"
-        filepath = os.path.join('data_egm', filename)  # Save file in 'data_egm' folder
+        filepath = os.path.join('data_egm', filename)
 
         # Prepare the full results dictionary with title and initial information
         full_results = {
@@ -258,45 +284,39 @@ class Errorgnomarker(chip):
             print(f"EGM results saved to {filepath}")
         except Exception as e:
             print(f"Failed to save EGM results to JSON file: {e}")
-
-        # Generate the Level02 table or figures if specified
-        if visual_table:
-            print("[Generating] Level02 Table...")
-            report_manager = EGMReportManager(filepath)
-            report_manager.egm_level02_table()
-
-        if visual_figure:
-            print("[Generating] Level02 Figures...")
-            report_manager = EGMReportManager(filepath)
-            report_manager.egm_level02_figure()
-
-        # Optionally, you can return the full results dictionary
-        return full_results
+        
+        return filepath
 
 
+    def draw_visual_table(self, *args):
+        """
+        Generate a table for the given metrics.
+        Automatically uses the latest filepath saved.
+        """
+        # Retrieve the last saved filepath
+        current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{self.chip_name}_egm_data_{current_datetime}.json"
+        filepath = os.path.join('data_egm', filename)
+        report_manager = EGMReportManager(filepath)  # Using the latest filepath
+        report_manager.egm_level02_table(*args)
 
-# from errorgnomark.token_manager import define_token, get_token
-# # Define your token
-# token = ""
+    def plot_visual_figure(self, *args):
+        """
+        Generate figures for the given metrics.
+        Automatically uses the latest filepath saved.
+        """
+        # Retrieve the last saved filepath
+        current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{self.chip_name}_egm_data_{current_datetime}.json"
+        filepath = os.path.join('data_egm', filename)
 
-# define_token(token)
-
-# # Retrieve the token if needed
-# token = get_token()
+        report_manager = EGMReportManager(filepath)  # Using the latest filepath
+        report_manager.egm_level02_figure(*args)
 
 
-# # Example usage:
-# if __name__ == "__main__":
-#     egm = Errorgnomarker(chip_name="Baihua",result_get='hardware')
-#     egm.egm_run(
-#     visual_table=True, 
-#     visual_figure=True, 
-#     q1rb_selected =True, 
-#     q1xeb_selected=False,          
-#     q1csbp2x_selected=False,      
-#     q2rb_selected=False,           
-#     qmgate_ghz_selected=False,     
-#     qmgate_stqv_selected=False,    
-#     qmgate_mrb_selected=False,    
-#     qmgate_clops_selected=False,  
-#     qmgate_vqe_selected=False )    
+
+
+
+
+
+

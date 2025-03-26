@@ -12,62 +12,36 @@ Notes:
 - To run on an actual chip, users need to register and provide a valid token.
 """
 
-# Step 1: Import Required Modules
+# Import Required Modules
 from errorgnomark import Errorgnomarker
 from errorgnomark.token_manager import define_token, get_token
 
-# ---------------------------------------------
-# Simulation Mode
-# ---------------------------------------------
-egm = Errorgnomarker(chip_name="QXX", result_get='noisysimulation')
+# Step 1: Define Your Token
+# Replace with your actual token
+define_token("your token")
 
-# ---------------------------------------------
-# Real Quantum Chip Mode
-# ---------------------------------------------
-# To execute tasks on real quantum hardware, follow these steps:
+# Step 2: Initialize the Errorgnomarker
+# Use simulation mode or real hardware mode
+egm = Errorgnomarker(chip_name="Baihua", result_get='noisysimulation')  # For simulation mode
+# egm = Errorgnomarker(chip_name="Baihua", result_get='hardware')  # For real hardware mode
 
-# 1. Obtain a Token:
-#    Get a unique token from the quantum chip provider (e.g., Quafu). Register and retrieve your token.
-
-# 2. Set and Use the Token:
-#    Use the token_manager module to define and retrieve your token.
-
-# Example:
-# Define your token
-define_token("your_unique_token_here")
-
-# Retrieve the token if needed
-token = get_token()
-
-# Initialize the ErrorGnoMarker in hardware mode
-egm = Errorgnomarker(chip_name="QXX", result_get='hardware')
-
-# ---------------------------------------------
-# Step 2: Run Diagnostics and Benchmarking
-# ---------------------------------------------
-# Run the EGM metrics with selective tasks
+# Step 3: Run Diagnostics and Benchmarking
 results = egm.egm_run(
-    egm_level='level_0',           # Set the level of detail for execution (e.g., level_0, level_1, level_2)
-    visual_table=True,             # Generate Level02 table (True/False)
-    visual_figure=True,            # Generate Level02 figures (True/False)
-    q1rb_selected=True,            # Execute Single Qubit RB (True/False)
-    q1xeb_selected=True,           # Execute Single Qubit XEB (True/False)
-    q1csbp2x_selected=False,       # Execute Single Qubit CSB (True/False)
-    q2rb_selected=True,            # Execute Two Qubit RB (True/False)
-    qmgate_ghz_selected=True,      # Execute m-Qubit GHZ Fidelity (True/False)
-    qmgate_stqv_selected=True,     # Execute m-Qubit StanQV Fidelity (True/False)
-    qmgate_mrb_selected=False,     # Execute m-Qubit MRB Fidelity (True/False)
-    qmgate_clops_selected=False,   # Execute m-Qubit Speed CLOPS (True/False)
-    qmgate_vqe_selected=False      # Execute m-Qubit VQE (True/False)
+    rbq1_selected=True,           # Execute Single Qubit RB for Q1
+    xebq1_selected=True,          # Execute Single Qubit XEB for Q1
+    csbq1_selected=True,          # Execute Single Qubit CSB for Q1
+    rbq2_selected=True,           # Execute Two Qubit RB for Q2
+    xebq2_selected=True,          # Execute Two Qubit XEB for Q2
+    csbq2_selected=True,          # Execute Two Qubit CSB for Q2
+    ghzqm_selected=True,          # Execute m-Qubit GHZ Fidelity
+    qvqm_selected=True,           # Execute m-Qubit StanQV Fidelity
+    mrbqm_selected=True,          # Execute m-Qubit MRB Fidelity
+    clopsqm_selected=True,        # Execute m-Qubit Speed CLOPS
+    vqeqm_selected=True           # Execute m-Qubit VQE
 )
 
-# Results:
-# The results will be saved as a JSON file in the `data_egm` folder.
-# Optionally, tables and figures will be saved in their respective folders.
+# Step 4: Visualize Results
+egm.draw_visual_table()  # Draw the visual table for selected metrics
+egm.plot_visual_figure()  # Plot the visual figures for selected metrics
 
-"""
-Options:
-- egm_level='level_2': Retrieves detailed noise information for the chip.
-- visual_table=True: Outputs a comprehensive diagnostic report in table format.
-- visual_figure=True: Generates and saves visualized diagnostic results.
-"""
+# Results are saved in the `data_egm` folder, along with tables and figures if enabled.

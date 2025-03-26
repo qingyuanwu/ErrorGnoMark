@@ -15,13 +15,15 @@ from qiskit_aer import AerSimulator  # For simulating quantum circuits
 from qiskit.primitives import Estimator  # For estimating circuit properties
 
 
+# Add the ErrorGnoMark package to the system path
+
 from errorgnomark.cirpulse_generator.circuit_generator import CircuitGenerator  # For circuit generation
 from errorgnomark.execute import QuantumJobRunner  # For executing quantum jobs
 from errorgnomark.data_analysis.layer_cirgate import MetricQuality, MetricSpeed  # For analyzing circuit metrics
 
 
 class QualityQ1Gate:
-    def __init__(self, qubit_index_list, result_get='hardware'):
+    def __init__(self, qubit_index_list, result_get = 'noisysimulation'):
         """
         Initializes the QualityQ1Gate class with the given qubit indices and result type.
 
@@ -33,7 +35,7 @@ class QualityQ1Gate:
         self.result_get = result_get
 
 
-    def q1rb(self, length_max=32, step_size=4, use_fake_data=None):
+    def q1rb(self, length_max=16, step_size=4, use_fake_data=None):
         """
         Generates and runs 1-qubit random benchmarking circuits, and calculates error rates.
 
@@ -58,7 +60,7 @@ class QualityQ1Gate:
             length_max=length_max,
             step_size=step_size
         )
-        circuits = circuit_gen.rbq1_circuit(ncr=30)
+        circuits = circuit_gen.rbq1_circuit(ncr=10)
 
         # Step 2: Execute circuits and collect results
         total_qubits = len(self.qubit_index_list)  # Number of qubit indices
@@ -82,7 +84,7 @@ class QualityQ1Gate:
                     length_results.append(results)
                 all_results.append(length_results)
         
-        print('rbq1results', all_results)
+        # print('rbq1results', all_results)
         
         # Step 3: Data analysis using MetricQuality
         metric = MetricQuality(all_results={
@@ -99,13 +101,13 @@ class QualityQ1Gate:
             cleaned_error_rates[f"qubit_{qubit_index}"] = {
                 "error_rate": float(error_rate) if not np.isnan(error_rate) else None
             }
-        print ('rbq1cleaned_error_rates',cleaned_error_rates)
+        # print ('rbq1cleaned_error_rates',cleaned_error_rates)
         return cleaned_error_rates
 
 
         
 
-    def q1xeb(self, length_max=32, step_size=4, use_fake_data=None):
+    def q1xeb(self, length_max=16, step_size=4, use_fake_data=None):
         """
         Generates and runs 1-qubit XEB circuits, including both hardware/fake data execution
         and ideal simulation, and calculates error rates.
@@ -123,7 +125,7 @@ class QualityQ1Gate:
             length_max=length_max,
             step_size=step_size
         )
-        circuits_xeb1 = circuit_gen.xebq1_circuit(ncr=30)  # Returns [qubit][length][ncr circuits]
+        circuits_xeb1 = circuit_gen.xebq1_circuit(ncr=2)  # Returns [qubit][length][ncr circuits]
 
         # Step 2: Execute circuits and collect results
         total_steps = len(circuits_xeb1)  # Total number of qubits
@@ -180,18 +182,10 @@ class QualityQ1Gate:
     def q1csb_pi_over_2_x(self, csb_avg=True):
         """
         Generate and execute π/2-x direction CSB circuits, then calculate and return the error rates.
-
-        Parameters:
-            csb_avg (bool or None): Whether to compute and return average errors for all qubits.
-                                        If None or False, average is not computed. If True, average is computed.
-
-        Returns:
-            dict: Contains process infidelity, stochastic infidelity, and angle error for each qubit,
-                and optionally the average errors for all qubits if csb_avg=True.
         """
         # Generate π/2-x direction CSB circuits
         circuit_gen = CircuitGenerator(
-            qubit_select=self.qubit_index_list, 
+            qubit_select=self.qubit_index_list,
             qubit_connectivity=[],  # Not used for 1-qubit circuits
         )
         pi_over_2_x_circuits = circuit_gen.generate_pi_over_2_x_csb_circuits()
@@ -200,21 +194,49 @@ class QualityQ1Gate:
         total_steps = len(pi_over_2_x_circuits)  # Total number of qubits
         hardware_results = []
 
+        # Loop through each qubit's circuits
         with tqdm(total=total_steps, desc="Running Q1CSB π/2-x Tasks", unit="qubit") as pbar:
             for qubit_idx, qubit_circuits in enumerate(pi_over_2_x_circuits):
+                # Check if there are any circuits for this qubit
+                if not qubit_circuits:
+                    print(f"Warning: No circuits found for qubit {qubit_idx}")
+                    hardware_results.append(None)
+                    pbar.update(1)
+                    continue
+
+                # Check if the circuits are valid
+                if any(circuit is None for circuit in qubit_circuits):
+                    print(f"Error: Invalid circuit(s) for qubit {qubit_idx}. Skipping execution.")
+                    hardware_results.append(None)
+                    pbar.update(1)
+                    continue
+
+                # Run the job for this qubit's circuits
                 job_runner = QuantumJobRunner(qubit_circuits)
-                if self.result_get == 'hardware':
-                    results = job_runner.quarkstudio_run(compile=False)
-                elif self.result_get == 'noisysimulation':
-                    results = job_runner.simulation_ideal_qiskit(noise_model=True)
-                hardware_results.append(results)
+                try:
+                    if self.result_get == 'hardware':
+                        results = job_runner.quarkstudio_run(compile=False)
+                    elif self.result_get == 'noisysimulation':
+                        results = job_runner.simulation_ideal_qiskit(noise_model=True)
+
+                    if results is None:
+                        print(f"Error: No results returned for qubit {qubit_idx}")
+                        hardware_results.append(None)
+                    else:
+                        hardware_results.append(results)
+
+                except Exception as e:
+                    print(f"Error processing qubit {qubit_idx}: {e}")
+                    hardware_results.append(None)
+
                 pbar.update(1)
 
         # Calculate CSB error rates
         all_results = {
             'hardware': hardware_results,
-            'simulation': []  # Placeholder for simulation data if available
+            'simulation': hardware_results  # Placeholder for simulation data if available
         }
+
         metric_quality = MetricQuality(all_results)
         csb_errors = metric_quality.csbq1(csb_avg=csb_avg)
 
@@ -225,12 +247,10 @@ class QualityQ1Gate:
             stochastic_infidelities = csb_errors.get('stochastic_infidelities', [])
             angle_errors = csb_errors.get('angle_errors', [])
 
-            # Compute averages for each metric (skip None values)
             avg_process_infidelity = np.mean([x for x in process_infidelities if x is not None]) if process_infidelities else None
             avg_stochastic_infidelity = np.mean([x for x in stochastic_infidelities if x is not None]) if stochastic_infidelities else None
             avg_angle_error = np.mean([x for x in angle_errors if x is not None]) if angle_errors else None
 
-            # Add average values to the result dictionary
             csb_errors['process_infidelity_avg'] = avg_process_infidelity
             csb_errors['stochastic_infidelity_avg'] = avg_stochastic_infidelity
             csb_errors['angle_error_avg'] = avg_angle_error
@@ -319,7 +339,7 @@ class QualityQ2Gate:
 
 
 
-    def q2rb(self, length_max=32, step_size=4, use_fake_data=None):
+    def q2rb(self, length_max=16, step_size=4, use_fake_data=None):
         """
         Generates and runs 2-qubit random benchmarking circuits, and calculates error rates.
 
@@ -340,7 +360,7 @@ class QualityQ2Gate:
             step_size=step_size
         )
 
-        circuits = circuit_gen.rbq2_circuit(ncr=30)  # Generate 2-qubit RB circuits
+        circuits = circuit_gen.rbq2_circuit(ncr=10)  # Generate 2-qubit RB circuits
 
         # Step 2: Execute circuits and collect results sequentially
         total_qubit_pairs = len(circuits)  # Total number of qubit pairs
@@ -364,7 +384,7 @@ class QualityQ2Gate:
                     length_results.append(results)
                 all_results.append(length_results)
 
-        print('rbq2results', all_results)
+        # print('rbq2results', all_results)
 
         # Step 3: Data analysis using MetricQuality
         metric = MetricQuality(all_results={
@@ -372,7 +392,7 @@ class QualityQ2Gate:
             'simulation': all_results  # Assuming simulation data is same as hardware for RB
         })
         error_rates = metric.rbq2(length_max, step_size)
-        print('error_rates', error_rates)
+        # print('error_rates', error_rates)
 
         # Step 4: Prepare the results in a dictionary format
         result_dict = {}
@@ -394,7 +414,7 @@ class QualityQ2Gate:
 
 
 
-    def q2xeb(self, length_max=32, step_size=4, use_fake_data=None):
+    def q2xeb(self, length_max=16, step_size=4, use_fake_data=None):
         """
         Generates and runs 2-qubit XEB (cross-entropy benchmarking) circuits, including both hardware/fake data execution
         and ideal simulation, and calculates error rates.
@@ -415,7 +435,7 @@ class QualityQ2Gate:
             length_max=length_max,
             step_size=step_size
         )
-        circuits_xeb2 = circuit_gen.xebq2_circuit(ncr=30)  # Returns [qubit pair][length][ncr circuits]
+        circuits_xeb2 = circuit_gen.xebq2_circuit(ncr=2)  # Returns [qubit pair][length][ncr circuits]
 
         # Initialize containers for hardware and simulation results
         all_results_simulation = []  # [qubit pair][length][ncr]
@@ -455,7 +475,7 @@ class QualityQ2Gate:
                     all_results_hardware.append(qubit_hardware_results)
                     pbar.update(1)  # Update the progress bar for each qubit pair
         
-        print ('xebq2results', all_results_hardware)
+        # print ('xebq2results', all_results_hardware)
         # Step 3: Data analysis using MetricQuality
         metric = MetricQuality(all_results={
             'hardware': all_results_hardware,
@@ -492,8 +512,8 @@ class QualityQ2Gate:
         generator = CircuitGenerator(
             qubit_select=[],  # Not used in current implementation
             qubit_connectivity=qubit_connectivity,
-            length_max=30,    # Adjust as necessary
-            step_size=4       # Adjust as necessary
+            length_max=6,    # Adjust as necessary
+            step_size=2      # Adjust as necessary
         )
         circuits_nested = generator.generate_csbcircuit_for_czgate()
 
@@ -516,7 +536,7 @@ class QualityQ2Gate:
                 hardware_results.append(results)
                 pbar.update(1)  # Update progress bar for each qubit pair
         
-        print ('csbq2results', hardware_results)
+        # print ('csbq2results', hardware_results)
         # Step 4: Compute CSB error using MetricQuality
         metric = MetricQuality(all_results={
             'hardware': hardware_results,
@@ -540,7 +560,7 @@ class QualityQ2Gate:
 
 class QualityQmgate:
 
-    def __init__(self, qubit_connectivity, qubit_index_list,result_get = 'hardware'):
+    def __init__(self, qubit_connectivity, qubit_index_list,result_get = 'noisysimulation'):
         """
         Initializes the PropertyQ2Gate class with the given qubit pairs.
         
@@ -552,7 +572,7 @@ class QualityQmgate:
         self. result_get = result_get
 
 
-    def qmghz_fidelity(self, nqubit_ghz=4, ncr=30, use_fake_data=None):
+    def qmghz_fidelity(self, ncr=3, use_fake_data=None):
         """
         Generates GHZ circuits, executes them, and calculates the fidelity.
 
@@ -572,7 +592,7 @@ class QualityQmgate:
 
         nqghz_list = [3, 4, 5, 6, 7, 8]  # List of qubit sizes for GHZ circuits
         ghz_circuits = circuit_gen.ghz_circuits(nqghz_list, ncr)
-
+        # print (' ghz_circuits ', ghz_circuits[0][0])
         # Step 2: Execute circuits and collect results
         total_circuits = len(ghz_circuits)  # Total number of GHZ circuits
         hardware_results = []
@@ -589,14 +609,14 @@ class QualityQmgate:
                 elif self.result_get == 'noisysimulation':
                     results = job_runner.simulation_ideal_qiskit(noise_model=True)
             hardware_results.append(results)
-
+        # print ('hardware_resultsghz',hardware_results)
         # Step 3: Prepare results for analysis
         all_results = {
             'hardware': hardware_results,
             'simulation': hardware_results  # Can be adjusted based on simulation needs
         }
         
-        print ('ghzrestults',all_results )
+        # print ('ghzrestults',all_results )
         # Step 4: Analyze GHZ fidelity using MetricQuality
         metric = MetricQuality(all_results=all_results)
         fidelity = metric.ghzqm_fidelity()
@@ -609,7 +629,7 @@ class QualityQmgate:
         }
 
 
-    def qmmrb(self, density_cz=0.75, ncr=30):
+    def qmmrb(self, density_cz=0.75, ncr=5):
         """
         Generates and executes quantum circuits based on the provided CZ gate density and number of circuits.
 
@@ -620,8 +640,19 @@ class QualityQmgate:
         Returns:
             dict: A nested dictionary where the first layer corresponds to qubit groups,
                 and the second layer corresponds to different circuit lengths. 
-                Each element is the average effective polarization S for that qubit group and circuit length.
-                Structure: {qubit_group: {length: average_S}}
+                Each element is a dictionary with the qubit list and corresponding MRB results.
+                Structure: 
+                {
+                    'hardware': {
+                        'qubit_group_1': {
+                            'length_1': {'qubits': [qubit_list], 'mrb_result': average_S},
+                            'length_2': {'qubits': [qubit_list], 'mrb_result': average_S},
+                            ...
+                        },
+                        ...
+                    },
+                    'simulation': { ... }
+                }
         """
         # Initialize results containers for hardware and simulation
         all_hardware = []   # Structure: [qubit_group][length][ncr_circuit]
@@ -632,7 +663,7 @@ class QualityQmgate:
             qubit_select=self.qubit_index_list,
             qubit_connectivity=self.qubit_connectivity
         )
-        generated_circuits = circuit_gen.mrbqm_circuit(ncr=ncr)  # Structure: [qubit_group][length][ncr]
+        generated_circuits, qubits_for_length = circuit_gen.mrbqm_circuit(ncr=ncr)  # Structure: [qubit_group][length][ncr]
 
         # Total number of tasks for the progress bar
         total_steps = sum(len(length_circuits) for qubit_group_circuits in generated_circuits for length_circuits in qubit_group_circuits)
@@ -654,7 +685,7 @@ class QualityQmgate:
                     result_hardware_len.append(execution_results)
 
                     # Execute on noiseless simulation
-                    simulation_results = job_runner.simulation_ideal_qiskit(compile=True)
+                    simulation_results = job_runner.simulation_ideal_qiskit(compile=True,noise_model=None)
                     result_noisysim_len.append(simulation_results)
 
                     pbar.update(1)  # Increment progress bar for each length of circuits
@@ -667,29 +698,16 @@ class QualityQmgate:
             'hardware': all_hardware,
             'simulation': all_simulation
         }
-        print ('mrbrestults',all_results )
+        
+        # print ('all_results',all_results)
         # Initialize MetricQuality and compute effective polarization
         metric_quality = MetricQuality(all_results=all_results)
         polarizations = metric_quality.mrbqm()
-
-        # Structure the return result with qubit group and length as keys, showing average polarization
-        polarization_results = {
-            'qubit_groups': {}
-        }
-
-        # Process the polarizations into the desired structure
-        for qubit_group_index, group_polarizations in enumerate(polarizations):
-            qubit_group_key = f'qubit_group_{qubit_group_index + 1}'
-            polarization_results['qubit_groups'][qubit_group_key] = {}
-            
-            for length_index, length_polarization in enumerate(group_polarizations):
-                polarization_results['qubit_groups'][qubit_group_key][f'length_{length_index + 1}'] = length_polarization
-
-        return polarization_results
+        polarization_results = {'polarizations': polarizations, 'qubits_for_length': qubits_for_length}
+        return polarization_results 
 
 
-
-    def qmstanqv(self, ncr=10, nqubits_max=5):
+    def qmstanqv(self, ncr=5, nqubits_max=5):
         """
         Generates Quantum Volume (QV) circuits, executes them, and evaluates the Quantum Volume (QV).
 
@@ -781,7 +799,7 @@ class SpeedQmgate:
         self.qubit_index_list = qubit_index_list
         self.result_get = result_get
     
-    def qmclops(self, num_templates=100, num_updates=10, num_layers=5, num_qubits=5, num_shots=1):
+    def qmclops(self, num_templates=5, num_updates=5, num_layers=5, num_qubits=5, num_shots=1):
         """
         Calculates CLOPSQM (Circuit Layer Optimization for Quantum Simulation Metric).
 
@@ -965,3 +983,4 @@ class ApplicationQmgate:
             f"on {num_qubits} qubits using {ansatz_type} ansatz."
         )
         return description
+

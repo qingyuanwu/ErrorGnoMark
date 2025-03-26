@@ -10,12 +10,11 @@ import copy
 # Suppress DeprecationWarnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 
-
 # Third-party imports
 import numpy as np  # For numerical operations
 from qiskit import QuantumCircuit  # For creating and managing quantum circuits
 
-
+# Add the ErrorGnoMark package to the system path
 from errorgnomark.cirpulse_generator.elements import (
     ROTATION_ANGLES,
     SINGLE_QUBIT_GATES,
@@ -65,7 +64,7 @@ class CircuitGenerator:
     could be used in principle.
     """
 
-    def __init__(self, qubit_select, qubit_connectivity, length_max=12, step_size=4):
+    def __init__(self, qubit_select, qubit_connectivity, length_max=16, step_size=4):
         """
         Initializes the Circuit Generator.
 
@@ -183,7 +182,7 @@ class CircuitGenerator:
 
 
 
-    def xebq1_circuit(self, ncr=1):
+    def xebq1_circuit(self, ncr=30):
         """
         Generate random 1-qubit XEB gate circuits.
 
@@ -231,7 +230,7 @@ class CircuitGenerator:
 
         return circuits_xebq1
 
-    def xebq2_circuit(self, ncr=1):
+    def xebq2_circuit(self, ncr=30):
         """
         Generate random 2-qubit XEB (cross-entropy benchmarking) gate circuits.
 
@@ -297,7 +296,7 @@ class CircuitGenerator:
 
 
 
-    def generate_pi_over_2_x_csb_circuits(self, ini_modes=['x', 'z'], rep=1, qubit_indices=[0]):
+    def generate_pi_over_2_x_csb_circuits(self, ini_modes=['x', 'z'], rep=1):
         """
         Generate π/2-x direction CSB circuits.
 
@@ -312,7 +311,8 @@ class CircuitGenerator:
         circuits_grouped = []
 
         # Iterate over the selected qubits
-        for qubit in self.qubit_select:
+        qubit_qubit_select_new = len(self.qubit_select) * [0]
+        for qubit in qubit_qubit_select_new:
             csb_gen = csbq1_circuit_generator(rot_axis='x', rot_angle=np.pi / 2, rep=rep)  # Create generator
             qubit_circuits = []
             
@@ -321,7 +321,7 @@ class CircuitGenerator:
                 # Generate circuits for different lengths (from 0 to max length)
                 for lc in range(self.length_max + 1):
                     # Generate the circuit for the current length and initial mode
-                    qc = csb_gen.csbq1_circuit(lc=lc, ini_mode=ini_mode, qubit_indices=qubit_indices)
+                    qc = csb_gen.x_direction_csbcircuit_pi_over_2(lc, ini_mode, qubit_indices=[qubit])
                     qubit_circuits.append(qc)
             
             circuits_grouped.append(qubit_circuits)  # Append the circuits for this qubit
@@ -506,7 +506,7 @@ class CircuitGenerator:
         return all_circuits
 
 
-    def mrbqm_circuit(self, density_cz=0.75, ncr=1):
+    def mrbqm_circuit(self, density_cz=0.5, ncr=2):
         """
         Generates quantum circuits based on the provided CZ gate density and number of circuits.
 
@@ -517,6 +517,8 @@ class CircuitGenerator:
         Returns:
             list of list of list of QuantumCircuit: Generated quantum circuits organized as 
                 circuits[num_qubits][length][ncr].
+            dict: A dictionary of qubit lists for each length, structured as 
+                qubits_for_length[num_qubits][length].
         """
         # Validate the density_cz parameter
         if not (0 < density_cz <= 1):
@@ -527,6 +529,7 @@ class CircuitGenerator:
 
         # Initialize the nested circuits list
         circuits = []  # Structure: circuits[num_qubits][length][ncr]
+        qubits_for_length = {}  # Dictionary to store qubits for each length
 
         # Sort the selected qubits to ensure consistent ordering
         sorted_qubits = sorted(self.qubit_select)
@@ -544,6 +547,7 @@ class CircuitGenerator:
 
             # Initialize the list for the current number of qubits
             circuits_per_qubit = []
+            qubits_for_length[num_qubits] = {}  # Initialize the dictionary for this number of qubits
 
             # Middle loop: Iterate over each circuit length
             for length in length_list:
@@ -626,10 +630,15 @@ class CircuitGenerator:
                 # Add the current length's circuits to the current qubit count's list
                 circuits_per_qubit.append(circuits_per_length)
 
+                # Store the qubits used for the current length
+                qubits_for_length[num_qubits][length] = current_qubits
+
             # Add the current qubit count's circuits to the main circuits list
             circuits.append(circuits_per_qubit)
 
-        return circuits
+        # Return the quantum circuits and the qubits used for each length
+        return circuits, qubits_for_length
+
 
 
     def clopsqm_circuit(self, num_templates=50, num_updates=10, num_qubits=5):
@@ -692,3 +701,13 @@ class CircuitGenerator:
             
             return all_circuits  # Return the list of generated circuits for all layers
 
+
+
+# # Initialize CircuitGenerator and generate MRB circuits
+# qubit_index_list = [0,1,2,3,4]
+# qubit_connectivity = [[0,1],[1,2],[2,3],[3,4]]
+# ncr = 3
+# circuit_gen = CircuitGenerator(
+# qubit_select=qubit_index_list,qubit_connectivity=qubit_connectivity)
+# generated_circuits, qubits_for_length = circuit_gen.mrbqm_circuit(ncr=ncr)  # Structure: [qubit_group][length][ncr]
+# print (generated_circuits[1][0][0])
