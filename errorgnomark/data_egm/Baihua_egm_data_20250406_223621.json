@@ -1,0 +1,93 @@
+{
+    "title": "Baihua_egm_data_20250406_223621.json",
+    "chip_info": {
+        "chip_name": "Baihua",
+        "rows": 12,
+        "columns": 13
+    },
+    "qubit_index_list": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "qubit_connectivity": [
+        [
+            0,
+            1
+        ],
+        [
+            1,
+            2
+        ],
+        [
+            2,
+            3
+        ]
+    ],
+    "results": {
+        "res_egmq1_xeb": {
+            "hardware": [
+                0.027907773486544163,
+                0.017909515482212146,
+                0.04098641625150706,
+                0.04201624041986013
+            ],
+            "use_fake_data": null
+        },
+        "res_egmq1_csbp2x": {
+            "process_infidelities": [
+                0.004933216408710139,
+                0.0012293598015972185,
+                0.04407213557928069,
+                0.04180204686203548
+            ],
+            "stochastic_infidelities": [
+                0.004925590407616087,
+                0.0012271258616621816,
+                0.043322942447946766,
+                0.041120241684754144
+            ],
+            "angle_errors": [
+                0.002126047244564555,
+                0,
+                0.0026598574433456257,
+                0.008055975974200269
+            ],
+            "process_infidelity_avg": 0.023009189662905882,
+            "stochastic_infidelity_avg": 0.022648975100494795,
+            "angle_error_avg": 0.0032104701655276124
+        },
+        "res_egmq2_xeb": {
+            "hardware": [
+                0.07934015207912015,
+                0.08980142172257494,
+                0.04321849465865554
+            ],
+            "use_fake_data": null
+        },
+        "res_egmq2_csb": {
+            "source": "noisysimulation",
+            "qubit_pairs_results": [
+                {
+                    "process_infidelity": 0.003325988502136501,
+                    "stochastic_infidelity": 0.001664379330345911,
+                    "theta_error": 3.141592653589793,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.0026562850297608964,
+                    "stochastic_infidelity": 0.0013290256694955538,
+                    "theta_error": 3.141592653589793,
+                    "phi_error": 0.0
+                },
+                {
+                    "process_infidelity": 0.0002003773459877678,
+                    "stochastic_infidelity": 0.00010019369238190023,
+                    "theta_error": 0.11905142031439109,
+                    "phi_error": 0.0
+                }
+            ]
+        }
+    }
+}

@@ -9,7 +9,8 @@ from datetime import datetime  # For handling date and time
 from requests.exceptions import RequestException, ReadTimeout  # For HTTP requests and error handling
 from tqdm import tqdm  # For progress bar visualization
 
-# Add the ErrorGnoMark package to the system path
+# Local imports
+
 from errorgnomark.cirpulse_generator.qubit_selector import qubit_selection, chip  # For qubit selection and chip setup
 from errorgnomark.configuration import (  # For various quality and benchmarking configurations
     QualityQ1Gate,
@@ -50,7 +51,7 @@ class Errorgnomarker(chip):
         self.selector = qubit_selection(
             chip=self,
             qubit_index_max=155,
-            qubit_number=9,
+            qubit_number=156,
             option=self.selection_options
         )
 
@@ -70,17 +71,17 @@ class Errorgnomarker(chip):
         self.config_application_qmgate = ApplicationQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
 
     def egm_run(self, 
-        rbq1_selected=True,
-        xebq1_selected=True,
-        csbq1_selected=True,
-        rbq2_selected=True,
-        xebq2_selected=True,
-        csbq2_selected=True,
-        ghzqm_selected=True,
-        qvqm_selected=True,
-        mrbqm_selected=True,
-        clopsqm_selected=True,
-        vqeqm_selected=True):
+        rbq1_selected=False,
+        xebq1_selected=False,
+        csbq1_selected=False,
+        rbq2_selected=False,
+        xebq2_selected=False,
+        csbq2_selected=False,
+        ghzqm_selected=False,
+        qvqm_selected=False,
+        mrbqm_selected=False,
+        clopsqm_selected=False,
+        vqeqm_selected=False):
         """
         Executes the EGM metrics and saves the results to a JSON file.
         Based on the selection flags, executes the relevant metric calculation.
@@ -312,11 +313,5 @@ class Errorgnomarker(chip):
 
         report_manager = EGMReportManager(filepath)  # Using the latest filepath
         report_manager.egm_level02_figure(*args)
-
-
-
-
-
-
 
 

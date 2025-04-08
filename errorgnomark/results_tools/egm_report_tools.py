@@ -8,8 +8,6 @@ import numpy as np
 # Third-party imports
 import matplotlib.pyplot as plt  # For creating visualizations
 
-# Add the ErrorGnoMark package to the system path
-sys.path.append('/Users/ousiachai/Desktop/ErrorGnoMark')
 # ErrorGnoMark-specific imports
 from errorgnomark.results_tools.visualization import VisualPlot  # For generating visual plots
 
@@ -871,76 +869,99 @@ class EGMReportManager:
             f.write(report)
         print(f"Level02 report saved as '{output_path}'.")
 
+    def _save_figure(self, figure, filepath):
+        """
+        Save a figure to the specified filepath.
+
+        Args:
+            figure: The matplotlib figure to be saved.
+            filepath (str): The file path to save the figure.
+        """
+        try:
+            figure.savefig(filepath)
+            print(f"Figure saved to {filepath}")
+        except Exception as e:
+            print(f"Failed to save figure: {e}")
+        finally:
+            # Close the figure after saving it to avoid memory issues
+            plt.close(figure)
 
 
     def egm_level02_figure(self,
-            rbq1_selected=True,
-            xebq1_selected=True,
-            csbq1_selected=True,
-            rbq2_selected=True,
-            xebq2_selected=True,
-            mrbqm_selected=True,
-            ghzqm_selected=True):  # New parameter to select GHZ plot
-        """
-        Generate visualizations for metrics and save them as images based on selected options.
-        """
+                rbq1_selected=True,
+                xebq1_selected=False,
+                csbq1_selected=False,
+                rbq2_selected=False,
+                xebq2_selected=False,
+                csbq2_cz_selected=False,
+                mrbqm_selected=False,
+                ghzqm_selected=False):  # New parameter for CSBQ2_CZ plot
+            """
+            Generate visualizations for metrics and save them as images based on selected options.
+            """
 
-        # selected options for each figure (set to True by default, you can set them to False to skip specific plots)
-        visualizer = VisualPlot(self.json_file_path)
+            # selected options for each figure (set to True by default, you can set them to False to skip specific plots)
+            visualizer = VisualPlot(self.json_file_path)
 
-        # Define output file paths
-        rbq1_path = os.path.join(self.figures_dir, "RBQ1_Heatmap.png")
-        xebq1_path = os.path.join(self.figures_dir, "XEBQ1_Heatmap.png")
-        csbq1_path = os.path.join(self.figures_dir, "CSBQ1_Heatmap.png")
-        rbq2_path = os.path.join(self.figures_dir, "RBQ2_Heatmap.png")
-        xebq2_path = os.path.join(self.figures_dir, "XEBQ2_Heatmap.png")
-        mrbqm_path = os.path.join(self.figures_dir, "MRBQM_Heatmap.png")
-        ghzqm_path = os.path.join(self.figures_dir, "GHZQM_Fidelity.png")  # Path for GHZ fidelity plot
+            # Define output file paths
+            rbq1_path = os.path.join(self.figures_dir, "RBQ1_Heatmap.png")
+            xebq1_path = os.path.join(self.figures_dir, "XEBQ1_Heatmap.png")
+            csbq1_path = os.path.join(self.figures_dir, "CSBQ1_Heatmap.png")
+            rbq2_path = os.path.join(self.figures_dir, "RBQ2_Heatmap.png")
+            xebq2_path = os.path.join(self.figures_dir, "XEBQ2_Heatmap.png")
+            csbq2_cz_path = os.path.join(self.figures_dir, "CSBQ2_CZ_Heatmap.png")  # Path for CSBQ2_CZ plot
+            mrbqm_path = os.path.join(self.figures_dir, "MRBQM_Heatmap.png")
+            ghzqm_path = os.path.join(self.figures_dir, "GHZQM_Fidelity.png")  # Path for GHZ fidelity plot
 
-        # Generate and save the plots based on the selected options
-        if rbq1_selected:
-            visualizer.plot_rbq1(grid_size=(5, 5))
-            plt.savefig(rbq1_path)
-            plt.close()
+            # Generate and save the plots based on the selected options
+            if rbq1_selected:
+                visualizer.plot_rbq1(grid_size=(12, 13))
+                plt.savefig(rbq1_path)
+                plt.close()
 
-        if xebq1_selected:
-            visualizer.plot_xebq1(grid_size=(5, 5))
-            plt.savefig(xebq1_path)
-            plt.close()
+            if xebq1_selected:
+                visualizer.plot_xebq1(grid_size=(12, 13))
+                plt.savefig(xebq1_path)
+                plt.close()
 
-        if csbq1_selected:
-            visualizer.plot_csbq1(grid_size=(5, 5))
-            plt.savefig(csbq1_path)
-            plt.close()
+            if csbq1_selected:
+                visualizer.plot_csbq1(grid_size=(12, 13))
+                plt.savefig(csbq1_path)
+                plt.close()
 
-        if rbq2_selected:
-            visualizer.plot_rbq2()
-            plt.savefig(rbq2_path)
-            plt.close()
+            if rbq2_selected:
+                visualizer.plot_rbq2()
+                plt.savefig(rbq2_path)
+                plt.close()
 
-        if xebq2_selected:
-            visualizer.plot_xebq2()
-            plt.savefig(xebq2_path)
-            plt.close()
+            if xebq2_selected:
+                visualizer.plot_xebq2()
+                plt.savefig(xebq2_path)
+                plt.close()
 
-        if mrbqm_selected:
-            visualizer.plot_mrbqm()
-            plt.savefig(mrbqm_path)
-            plt.close()
+            # Generate and save the CSBQ2_CZ plot if selected
+            if csbq2_cz_selected:  # Check if the CSBQ2_CZ plot is selected
+                visualizer.plot_csbq2_cz()  # Call the CSBQ2_CZ plot function
+                plt.savefig(csbq2_cz_path)  # Save the plot as a PNG file
+                plt.close()
 
-        # Generate and save the GHZ fidelity plot if selected
-        if ghzqm_selected:  # Check if the GHZ plot is selected
-            visualizer.plot_ghzqm_fidelity()  # Call the GHZ fidelity plot function
-            plt.savefig(ghzqm_path)  # Save the plot as a PNG file
-            plt.close()
+            if mrbqm_selected:
+                visualizer.plot_mrbqm()
+                plt.savefig(mrbqm_path)
+                plt.close()
 
+            # Generate and save the GHZ fidelity plot if selected
+            if ghzqm_selected:  # Check if the GHZ plot is selected
+                visualizer.plot_ghzqm_fidelity()  # Call the GHZ fidelity plot function
+                plt.savefig(ghzqm_path)  # Save the plot as a PNG file
+                plt.close()
 
 # import os
 # from errorgnomark.results_tools.egm_report_tools import EGMReportManager  # Import your EGMReportManager class
 
 # # Define the path to the JSON file
 # current_dir = os.getcwd()  # Get the current working directory
-# file_path = os.path.join(current_dir, "data_egm", "Baihua_egm_data_20250103_153026.json")  # Build the full file path
+# file_path = "/Users/ousiachai/Desktop/ErrorGnoMark/errorgnomark/data_egm/Baihua_egm_data_20250406_231821.json"  # Correct the file path
 
 # # Create an instance of EGMReportManager
 # report_manager = EGMReportManager(file_path)
@@ -952,3 +973,4 @@ class EGMReportManager:
 # report_manager.egm_level02_figure()
 
 # print("Reports and figures have been successfully generated!")
+
