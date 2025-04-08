@@ -13,7 +13,7 @@ Notes:
 """
 
 # Import Required Modules
-from errorgnomark import Errorgnomarker
+from errorgnomark.errorgnomarker import Errorgnomarker
 from errorgnomark.token_manager import define_token, get_token
 
 # Step 1: Define Your Token
