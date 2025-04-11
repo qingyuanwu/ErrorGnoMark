@@ -28,9 +28,15 @@ class Errorgnomarker(chip):
     Supports single-qubit, two-qubit, multi-qubit gates, and application-level tests.
     """
 
-    def __init__(self, chip_name="Baihua", result_get='noisysimulation'):
+    def __init__(self, chip_name="Baihua", result_get='noisysimulation',
+                 file_path="E:\Repositories\ErrorGnoMark\ScQ-Baihua信息.xlsx"):
         """
         Initializes the ErrorGnoMarker with the specified chip configuration.
+
+        Parameters:
+            chip_name (str): Name of the quantum chip (currently only "Baihua" supported)
+            result_get (str): Result acquisition method
+
         """
         super().__init__()  # Initialize the base chip class
         self.chip_name = chip_name
@@ -38,22 +44,35 @@ class Errorgnomarker(chip):
         if self.chip_name == "Baihua":
             self.rows = 12
             self.columns = 13
+
+            # 这是Baihua的设置，因此放到了if中
+            # self.selection_options = {
+            #     'max_qubits_per_row': self.columns,              # 在qubit_selection没有用到
+            #     'min_qubit_index': 0,                            # The number of the chip starts from 0
+            #     'max_qubit_index': self.rows * self.columns - 1
+            # }
+            self.selection_options = {
+                'min_qubit_index': 0,                            # The number of the chip starts from 0
+                'max_qubit_index': self.rows * self.columns - 1  # 若有芯片从1开始，则可以修改
+            }
+
+            # self.selector = qubit_selection(
+            #     chip=self,                                       # chip已经包含row和col，与self.selection_options中的max_qubits_per_row重复
+            #     qubit_index_max=self.rows * self.columns - 1,    # 此项和 self.selection_options 中 max_qubit_index重复
+            #     qubit_number=self.rows * self.columns,           # chip已经包含row和col，qubit_number可通过chip计算得到
+            #     option=self.selection_options
+            # )
+            self.selector = qubit_selection(
+                chip=self,
+                qubit_number=9,                    # The number of qubits to be used
+                file_path=file_path,
+                option=self.selection_options
+            )
         else:
-            raise ValueError(f"Unsupported chip name: {self.chip_name}")
+            # raise ValueError(f"Unsupported chip name: {self.chip_name}")
+            sys.exit(f"Unsupported chip name: {self.chip_name}. \nProgram terminated.")
 
         self.result_get = result_get
-        self.selection_options = {
-            'max_qubits_per_row': 13,
-            'min_qubit_index': 0,
-            'max_qubit_index': 155
-        }
-
-        self.selector = qubit_selection(
-            chip=self,
-            qubit_index_max=155,
-            qubit_number=156,
-            option=self.selection_options
-        )
 
         self.selection = self.selector.quselected()
         self.qubit_index_list = self.selection["qubit_index_list"]
@@ -64,11 +83,11 @@ class Errorgnomarker(chip):
         print("Qubit Connectivity:", self.qubit_connectivity)
         print("=" * 50)
 
-        self.config_quality_q1gate = QualityQ1Gate(self.qubit_index_list, result_get=result_get)
-        self.config_quality_q2gate = QualityQ2Gate(self.qubit_connectivity, result_get=result_get)
-        self.config_quality_qmgate = QualityQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
-        self.config_speed_qmgate = SpeedQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
-        self.config_application_qmgate = ApplicationQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=result_get)
+        self.config_quality_q1gate = QualityQ1Gate(self.qubit_index_list, result_get=self.result_get)
+        self.config_quality_q2gate = QualityQ2Gate(self.qubit_connectivity, result_get=self.result_get)
+        self.config_quality_qmgate = QualityQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=self.result_get)
+        self.config_speed_qmgate = SpeedQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=self.result_get)
+        self.config_application_qmgate = ApplicationQmgate(self.qubit_connectivity, self.qubit_index_list, result_get=self.result_get)
 
     def egm_run(self, 
         rbq1_selected=False,
