@@ -22,7 +22,8 @@ define_token("your token")
 
 # Step 2: Initialize the Errorgnomarker
 # Use simulation mode or real hardware mode
-egm = Errorgnomarker(chip_name="Baihua", result_get='noisysimulation')  # For simulation mode
+egm = Errorgnomarker(chip_name="Baihua", result_get='noisysimulation',
+                     file_path="E:\Repositories\ErrorGnoMark\ScQ-Baihua信息.xlsx")  # For simulation mode
 # egm = Errorgnomarker(chip_name="Baihua", result_get='hardware')  # For real hardware mode
 
 # Step 3: Run Diagnostics and Benchmarking
